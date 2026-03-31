@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Budget Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Page-specific styles to add to your styles.css later */
+        .chart-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+            border: 2px dashed #ecf0f1;
+        }
+        .report-list {
+            list-style: none;
+        }
+        .report-list li {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .report-list li:last-child {
+            border-bottom: none;
+        }
+        .download-link {
+            color: #27ae60;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <h2> BudgetTracker</h2>
+        <ul class="nav-links">
+            <li><a href="index.html">Dashboard</a></li>
+            <li><a href="transaction.html">Transactions</a></li>
+            <li><a href="budget.html">Budget</a></li>
+            <li><a href="reports.html" class="active">Reports</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        
+        <header class="header">
+            <h1>Financial Reports</h1>
+            <button class="btn-report" id="trigger-microservice">Generate New Monthly Report</button>
+        </header>
+
+        <section class="summary-cards" style="grid-template-columns: 1fr 1fr;">
+            <div class="

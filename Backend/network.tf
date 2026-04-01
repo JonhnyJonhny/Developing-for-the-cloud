@@ -41,7 +41,7 @@ resource "aws_subnet" "app_subnet2" {
 resource "aws_subnet" "private_subnet1" {
   vpc_id = aws_vpc.Budget_app.id
   cidr_block = "10.0.3.0/24"
-  availability_zone = "${var.aws_region}c"
+  availability_zone = "${var.aws_region}a"
 
   tags = {name = "Private_subnet1"}
 }
@@ -49,9 +49,25 @@ resource "aws_subnet" "private_subnet1" {
 resource "aws_subnet" "private_subnet2" {
   vpc_id = aws_vpc.Budget_app.id
   cidr_block = "10.0.4.0/24"
-  availability_zone = "${var.aws_region}d"
+  availability_zone = "${var.aws_region}b"
 
   tags = {name = "Private_subnet2"}
+}
+
+resource "aws_route_table" "app_rta1" {
+  vpc_id = aws_vpc.Budget_app.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat1.id
+  }
+}
+
+resource "aws_route_table" "app_rta2" {
+  vpc_id = aws_vpc.Budget_app.id
+  route{
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat2.id
+  }
 }
 
 resource "aws_route_table" "public_rta" {
@@ -77,12 +93,45 @@ resource "aws_route_table" "private_rt" {
   tags = {Name = "Private_RT"}
 }
 
-resource "aws_route_table_association" "private_rt1" {
+resource "aws_route_table_association" "private_rta1" {
   subnet_id = aws_subnet.private_subnet1.id
   route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_route_table_association" "private_rt2" {
+resource "aws_route_table_association" "private_rta2" {
   subnet_id = aws_subnet.private_subnet2.id
   route_table_id = aws_route_table.private_rt.id
+}
+
+resource "aws_route_table_association" "app_rta1" {
+  subnet_id = aws_subnet.app_subnet1.id
+  route_table_id = aws_route_table.app_rta1.id
+}
+
+resource "aws_route_table_association" "app_rta2" {
+  subnet_id = aws_subnet.app_subnet2.id
+  route_table_id = aws_route_table.app_rta2.id
+}
+
+
+resource "aws_eip" "nat_eip1" {
+  domain = "vpc"
+}
+
+resource "aws_eip" "nat_eip2" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat1" {
+  allocation_id = aws_eip.nat_eip1.id
+  subnet_id = aws_subnet.public_subnet1.id
+  tags = {Name = "nat-1"}
+  depends_on = [ aws_internet_gateway.My_IG ]
+}
+
+resource "aws_nat_gateway" "nat2" {
+  allocation_id = aws_eip.nat_eip2.id
+  subnet_id = aws_subnet.public_subnet2.id
+  tags = {Name = "nat-2"}
+  depends_on = [ aws_internet_gateway.My_IG ]
 }

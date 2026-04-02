@@ -1,12 +1,13 @@
-# Ignore Terraform files
-.terraform/
-*.tfstate
-*.tfstate.backup
-.terraform.lock.hcl
+# Ignore local terraform massive folders
+**/.terraform/
+**/.terraform.*
 
-# Ignore OS generated files
-.DS_Store
-Thumbs.db
+# Ignore secure state files
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+**/*.tfvars.json
 
-#Ignore awscli
-aws/
+# Ignore crash logs
+**/crash.log
+**/crash.*.log

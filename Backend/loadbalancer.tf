@@ -1,5 +1,5 @@
 resource "aws_lb" "public_nlb" {
-  name = "budget_public_nlb"
+  name = "budget-public-nlb"
   internal = false
   load_balancer_type = "network"
   subnets = [aws_subnet.public_subnet1.id,aws_subnet.public_subnet2.id]

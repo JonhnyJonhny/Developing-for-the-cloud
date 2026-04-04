@@ -18,7 +18,7 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
 
-resource "aws_iam_role" "name" {
+resource "aws_iam_role" "lambda_exec_role" {
   name = "budget_lambda_exec_role"
 
   assume_role_policy = jsonencode(
@@ -36,19 +36,19 @@ resource "aws_iam_role" "name" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_log" {
-  role = aws_iam_role.budget_lambda_exec_role.id
+  role = aws_iam_role.lambda_exec_role.id
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
 resource "aws_iam_role_policy" "lambda_permission" {
   name = "budget_lambda_permission"
-  role = aws_iam_role.budget_lambda_exec_role.id
+  role = aws_iam_role.lambda_exec_role.id
 
   policy = jsondecode({
     version = "2012-10-17"
     Statment = [{
       Effect = "Allow"
-      Action = {"sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"}
+      Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
       Resource = aws_sqs_queue.report_queue.arn
     },
     {
@@ -76,7 +76,7 @@ data "archive_file" "dummy_lambda" {
 
 resource "aws_lambda_function" "report_generator" {
   function_name = "budget_report_generation"
-  role = aws_iam_role.budget_lambda_exec_role.arn
+  role = aws_iam_role.lambda_exec_role.arn
   handler = "index.lamda_handler"
   runtime = "python3.9"
 

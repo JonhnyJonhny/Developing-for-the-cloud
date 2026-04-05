@@ -14,12 +14,12 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_launch_template" "budget_app_lt" {
   name_prefix = "budget_app_lt_"
-  image_id = data.aws_ami.ubuntu
+  image_id = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
   network_interfaces {
     associate_public_ip_address = false
-    security_groups = aws_db_instance.Budget_app_db
+    security_groups = [aws_security_group.web_sg.id]
   }
 
   tag_specifications {
@@ -65,12 +65,12 @@ resource "aws_lb_listener" "ELB_listener" {
 resource "aws_autoscaling_group" "App_AutoScaling" {
   name = "budget_app_AG"
   vpc_zone_identifier = [aws_subnet.app_subnet1.id,aws_subnet.app_subnet2.id]
-  target_group_arns = [aws_lb_target_group.TargetGroup]
+  target_group_arns = [aws_lb_target_group.TargetGroup.id]
   min_size = 1
   desired_capacity = 2
   max_size = 4
   launch_template {
-    id = aws_launch_template.budget_app_lt
+    id = aws_launch_template.budget_app_lt.id
     version = "$Lastest"
   }
 }

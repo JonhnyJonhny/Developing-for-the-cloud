@@ -44,7 +44,7 @@ resource "aws_iam_role_policy" "lambda_permission" {
   name = "budget_lambda_permission"
   role = aws_iam_role.lambda_exec_role.id
 
-  policy = jsondecode({
+  policy = jsonencode({
     version = "2012-10-17"
     Statment = [{
       Effect = "Allow"

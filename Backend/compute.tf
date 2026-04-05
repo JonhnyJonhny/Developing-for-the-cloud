@@ -58,14 +58,14 @@ resource "aws_lb_listener" "ELB_listener" {
 
   default_action {
     type = "forward"
-    target_group_arn = aws_lb_target_group.TargetGroup.id
+    target_group_arn = aws_lb_target_group.TargetGroup.arn
   }
 }
 
 resource "aws_autoscaling_group" "App_AutoScaling" {
   name = "budget_app_AG"
   vpc_zone_identifier = [aws_subnet.app_subnet1.id,aws_subnet.app_subnet2.id]
-  target_group_arns = [aws_lb_target_group.TargetGroup.id]
+  target_group_arns = [aws_lb_target_group.TargetGroup.arn]
   min_size = 1
   desired_capacity = 2
   max_size = 4

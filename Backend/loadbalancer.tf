@@ -18,6 +18,7 @@ resource "aws_lb_target_group_attachment" "nlb_to_elb" {
   target_group_arn = aws_lb_target_group.nlb_tg.arn
   target_id = aws_lb.App_lb.arn
   port = 80
+  depends_on = [ aws_lb_listener.ELB_listener ]
 }
 
 resource "aws_lb_listener" "nlb_listener" {

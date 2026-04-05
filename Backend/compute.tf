@@ -80,7 +80,7 @@ resource "aws_autoscaling_group" "App_AutoScaling" {
   max_size = 4
   launch_template {
     id = aws_launch_template.budget_app_lt.id
-    version = "$Lastest"
+    version = "$Latest"
   }
 }
 

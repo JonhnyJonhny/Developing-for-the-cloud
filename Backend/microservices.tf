@@ -45,8 +45,9 @@ resource "aws_iam_role_policy" "lambda_permission" {
   role = aws_iam_role.lambda_exec_role.id
 
   policy = jsonencode({
-    version = "2012-10-17"
-    Statment = [{
+    Version = "2012-10-17"
+    Statement = [
+    {
       Effect = "Allow"
       Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
       Resource = aws_sqs_queue.report_queue.arn

@@ -17,6 +17,15 @@ resource "aws_launch_template" "budget_app_lt" {
   image_id = data.aws_ami.ubuntu.id
   instance_type = "t3.micro"
 
+  user_data = base64encode(<<-EOF
+              #!/bin/bash
+              apt-get update -y
+              apt-get install -y nginx
+              systemctl start nginx
+              systemctl enable nginx
+              echo "<h1>Hello from my private Budget App server!</h1>" > /var/www/html/index.html
+              EOF
+  )
   network_interfaces {
     associate_public_ip_address = false
     security_groups = [aws_security_group.web_sg.id]
@@ -74,3 +83,4 @@ resource "aws_autoscaling_group" "App_AutoScaling" {
     version = "$Lastest"
   }
 }
+

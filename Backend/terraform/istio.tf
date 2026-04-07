@@ -30,8 +30,8 @@ resource "helm_release" "istio_ingress" {
     value = "docker.io/istio"
   }
 
-  set{
-    name "tag"
+  set {
+    name = "tag"
     value = "1.21.0"
   }
 

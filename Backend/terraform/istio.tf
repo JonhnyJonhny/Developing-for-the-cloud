@@ -2,38 +2,53 @@ resource "kubernetes_namespace_v1" "istio_system" {
   metadata {
     name = "istio-system"
   }
-  depends_on = [ aws_eks_node_group.workers ]
+  depends_on = [aws_eks_node_group.workers]
 }
 
-resource "helm_release" "istio" {
-  name = "istio-base"
+# 1. Istio Base CRDs
+resource "helm_release" "istio_base" {
+  name       = "istio-base"
   repository = "https://istio-release.storage.googleapis.com/charts"
-  chart = "base"
-  namespace = kubernetes_namespace_v1.istio_system.metadata[0].name
+  chart      = "base"
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
+  version    = "1.21.0"
 
   set {
-    name = "global.defaultPodLabels.istio-injection"
-    value = "enabled"
+    name  = "defaultRevision"
+    value = "default"
   }
 
-  depends_on = [ kubernetes_namespace_v1.istio_system ]
+  depends_on = [kubernetes_namespace_v1.istio_system]
 }
 
+# 2. Istiod (control plane) — YOU WERE MISSING THIS
+resource "helm_release" "istiod" {
+  name       = "istiod"
+  repository = "https://istio-release.storage.googleapis.com/charts"
+  chart      = "istiod"
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
+  version    = "1.21.0"
+
+  set {
+    name  = "meshConfig.accessLogFile"
+    value = "/dev/stdout"
+  }
+
+  depends_on = [helm_release.istio_base]
+}
+
+# 3. Ingress Gateway
 resource "helm_release" "istio_ingress" {
-  name = "istio-gateway"
+  name       = "istio-ingressgateway"
   repository = "https://istio-release.storage.googleapis.com/charts"
-  chart = "gateway"
-  namespace = kubernetes_namespace_v1.istio_system.metadata[0].name
+  chart      = "gateway"
+  namespace  = kubernetes_namespace_v1.istio_system.metadata[0].name
+  version    = "1.21.0"
 
   set {
-    name = "hub"
-    value = "docker.io/istio"
+    name  = "labels.istio"
+    value = "ingressgateway"
   }
 
-  set {
-    name = "tag"
-    value = "1.21.0"
-  }
-
-  depends_on = [ helm_release.istio ]
+  depends_on = [helm_release.istiod]
 }

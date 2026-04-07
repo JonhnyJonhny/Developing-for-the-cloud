@@ -3,63 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget Tracker Dashboard</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Budget App - Live!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 { color: #2c3e50; }
+        .success-badge {
+            background-color: #2ecc71;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        p { line-height: 1.6; color: #666; }
+    </style>
 </head>
 <body>
-
-    <aside class="sidebar">
-        <h2> BudgetTracker</h2>
-        <ul class="nav-links">
-            <li><a href="index.html" class="active">Dashboard</a></li>
-            <li><a href="transaction.html">Transactions</a></li>
-            <li><a href="budget.html">Budgets</a></li>
-            <li><a href="report.html">Reports</a></li>
-            <li><a href="#">Settings</a></li>
-        </ul>
-    </aside>
-
-    <main class="main-content">
-        
-        <header class="header">
-            <h1>Dashboard Overview</h1>
-            <button class="btn-report" id="btn-generate-report">+ Generate Report</button>
-        </header>
-
-        <section class="summary-cards">
-            <div class="card">
-                <h3>Total Balance</h3>
-                <div class="amount" id="total-balance">$0.00</div>
-            </div>
-            <div class="card">
-                <h3>Monthly Income</h3>
-                <div class="amount income" id="monthly-income">+$0.00</div>
-            </div>
-            <div class="card">
-                <h3>Monthly Expenses</h3>
-                <div class="amount expense" id="monthly-expenses">-$0.00</div>
-            </div>
-        </section>
-
-        <section class="transactions">
-            <h2>Recent Transactions</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Category</th>
-                        <th>Amount</th>
-                        <th>Type</th>
-                    </tr>
-                </thead>
-                <tbody id="transactions-body">
-                    </tbody>
-            </table>
-        </section>
-
-    </main>
-
-    <script src="app.js"></script>
+    <div class="container">
+        <div class="success-badge">✓ Connection Successful</div>
+        <h1>Budget App is Live!</h1>
+        <p>If you are seeing this page, it means your AWS EKS Cluster, Istio Load Balancer, and Route 53 DNS are all perfectly connected.</p>
+        <p><strong>Next Step:</strong> Replace this placeholder with your actual frontend code!</p>
+    </div>
 </body>
 </html>

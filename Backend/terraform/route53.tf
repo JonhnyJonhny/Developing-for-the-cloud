@@ -10,7 +10,13 @@ data "kubernetes_service_v1" "istio_ingress" {
   depends_on = [ helm_release.istio_ingress ]
 }
 
-data "aws_elb_hosted_zone_id" "main" {}
+data "aws_lb" "istio_ingress" {
+  tags = {
+    "kubernetes.io/cluster/budget-app-cluster" = "owned"
+    "kubernetes.io/service-name"               = "istio-system/istio-ingressgateway"
+  }
+  depends_on = [helm_release.istio_ingress]
+}
 
 resource "aws_route53_record" "app_record" {
   zone_id = aws_route53_zone.main.zone_id
@@ -18,8 +24,8 @@ resource "aws_route53_record" "app_record" {
   type    = "A"
 
   alias {
-    name                   = data.kubernetes_service_v1.istio_ingress.status[0].load_balancer[0].ingress[0].hostname
-    zone_id                = data.aws_elb_hosted_zone_id.main.id
+    name                   = data.aws_lb.istio_ingress.dns_name
+    zone_id                = data.aws_lb.istio_ingress.zone_id
     evaluate_target_health = true
   }
 }

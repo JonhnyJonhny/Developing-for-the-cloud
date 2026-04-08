@@ -1,0 +1,49 @@
+# application/k8s/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app-deployment
+  labels:
+    app: my-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+        # This injects the Istio Envoy sidecar
+        sidecar.istio.io/inject: "true" 
+    spec:
+      containers:
+      - name: my-app-container
+        # GitHub Actions will replace this placeholder with the real image tag
+        image: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:IMAGE_TAG_PLACEHOLDER
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          value: "your-rds-endpoint.amazonaws.com" # Your Terraform RDS output
+        - name: DB_USER
+          value: "admin"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  selector:
+    app: my-app
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP

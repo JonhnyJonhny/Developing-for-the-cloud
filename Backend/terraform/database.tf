@@ -1,22 +1,33 @@
-resource "aws_db_subnet_group" "db_subnet" {
-  name = "db_subnet_group"
-  subnet_ids = [aws_subnet.private_subnet1.id, aws_subnet.private_subnet2.id]
+resource "aws_db_subnet_group" "main" {
+  name = "main-db-subnet-group"
+  subnet_ids = [aws_subnet.private_db_1.id,aws_subnet.private_db_2.id]
+  tags = { Name = "main-db-subnet-group" }
 }
 
-resource "aws_db_instance" "Budget_app_db" {
-  allocated_storage = "20"
+resource "aws_security_group" "rds_sg" {
+  name = "rds-security-group"
+  description = "Allow MySQL traffic from EKS"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.10.0/24", "10.0.11.0/24"]
+  }
+}
+
+resource "aws_db_instance" "mysql" {
+  identifier = "app-db-mysql"
   engine = "mysql"
   engine_version = "8.0"
   instance_class = "db.t3.micro"
-  db_name = "Budget_app_db_instance"
+  allocated_storage = 20
+  db_name = "appdb"
   username = var.db_username
   password = var.db_password
+  db_subnet_group_name = aws_db_subnet_group.main.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
   skip_final_snapshot = true
-  db_subnet_group_name = aws_db_subnet_group.db_subnet.name
-  vpc_security_group_ids = [aws_security_group.db_sg.id]
   multi_az = false
-}
-
-output "db_endpoint" {
-  value = aws_db_instance.Budget_app_db.endpoint
 }

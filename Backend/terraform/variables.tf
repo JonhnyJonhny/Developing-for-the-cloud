@@ -1,18 +1,29 @@
 variable "aws_region" {
-  description = "Resource deployment location"
-  type = string
-  default = "us-east-1"
+  description = "AWS region"
+  type        = string
+  default     = "us-east-1"
 }
 
-variable "db_password" {
-    description = "DB master password"
-    type = string
-    sensitive = true
-    default = "admin123"
+variable "cluster_name" {
+  description = "Name of the EKS cluster"
+  type        = string
+  default     = "budget-app-cluster"
 }
 
 variable "db_username" {
-  description = "DB master username"
-  type = string
-  default = "admin"
+  description = "Database administrator username"
+  type        = string
+  default     = "admin"
+  sensitive   = true
+}
+
+variable "db_password" {
+  description = "Database administrator password"
+  type        = string
+  sensitive   = true
+
+  validation {
+    condition     = length(var.db_password) >= 8
+    error_message = "db_password must be at least 8 characters."
+  }
 }

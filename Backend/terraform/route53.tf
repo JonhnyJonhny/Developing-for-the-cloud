@@ -4,27 +4,21 @@ resource "aws_route53_zone" "main" {
 
 data "kubernetes_service_v1" "istio_ingress" {
   metadata {
-    name = "istio-ingressgateway"
-    namespace = kubernetes_namespace_v1.istio_system.metadata[0].name
+    name      = "istio-ingress"
+    namespace = "istio-system"
   }
-  depends_on = [ helm_release.istio_ingress ]
+  depends_on = [helm_release.istio_ingress]
 }
 
-data "aws_elb_hosted_zone_id" "main" {}
-
-resource "aws_route53_record" "app_record" {
+resource "aws_route53_record" "app" {
   zone_id = aws_route53_zone.main.zone_id
-  name    = "PhongKieuTele.id.vn"
-  type    = "A"
-
-  alias {
-    name                   = data.kubernetes_service_v1.istio_ingress.status[0].load_balancer[0].ingress[0].hostname
-    zone_id                = data.aws_elb_hosted_zone_id.main.id
-    evaluate_target_health = true
-  }
+  name    = "api.PhongKieuTele.id.vn"
+  type    = "CNAME"
+  ttl     = 300
+  records = [data.kubernetes_service_v1.istio_ingress.status[0].load_balancer[0].ingress[0].hostname]
 }
 
-output "route53_output" {
-  description = "copy to dns service"
-  value = aws_route53_zone.main.name_servers
+output "route53_name_servers" {
+  description = "Add these name servers to your domain registrar for PhongKieuTele.id.vn"
+  value       = aws_route53_zone.main.name_servers
 }

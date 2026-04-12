@@ -53,7 +53,6 @@ resource "aws_iam_role_policy_attachment" "eks_ecr" {
   role       = aws_iam_role.node_role.name
 }
 
-# Allow EKS worker nodes (backend pods) to send messages to the report SQS queue
 resource "aws_iam_role_policy" "node_sqs_send" {
   name = "eks-node-sqs-send"
   role = aws_iam_role.node_role.id

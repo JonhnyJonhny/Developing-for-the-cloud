@@ -1,0 +1,249 @@
+# ============================================================
+#  k8s/monitoring/grafana.yaml
+#  Deploys Grafana pre-configured with:
+#  - Prometheus as datasource
+#  - Budget tracker dashboard
+#  - Istio service mesh dashboard
+# ============================================================
+
+---
+# ── Grafana admin credentials stored as a K8s secret ─────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-credentials
+  namespace: monitoring
+type: Opaque
+stringData:
+  admin-user:     admin
+  admin-password: changeme   # Override by running: kubectl create secret generic grafana-credentials --from-literal=admin-password='YourPassword' -n monitoring --dry-run=client -o yaml | kubectl apply -f -
+
+---
+# ── ConfigMap — auto-provision Prometheus datasource ─────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  datasources.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-service:9090
+        access: proxy
+        isDefault: true
+        editable: false
+
+---
+# ── ConfigMap — pre-built budget tracker dashboard ───────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-config
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: default
+        folder: Budget Tracker
+        type: file
+        options:
+          path: /var/lib/grafana/dashboards
+
+---
+# ── ConfigMap — budget tracker dashboard JSON ─────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-budget
+  namespace: monitoring
+data:
+  budget-tracker.json: |
+    {
+      "title": "Budget Tracker — App Metrics",
+      "uid": "budget-tracker",
+      "tags": ["budget", "nodejs"],
+      "refresh": "30s",
+      "panels": [
+        {
+          "id": 1,
+          "title": "HTTP Requests per Second",
+          "type": "graph",
+          "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "rate(http_requests_total{job='budget-backend'}[5m])",
+            "legendFormat": "{{method}} {{route}}"
+          }]
+        },
+        {
+          "id": 2,
+          "title": "API Response Time (p95)",
+          "type": "graph",
+          "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+          "targets": [{
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_ms_bucket{job='budget-backend'}[5m]))",
+            "legendFormat": "p95 latency"
+          }]
+        },
+        {
+          "id": 3,
+          "title": "Active DB Connections (RDS)",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "mysql_global_status_threads_connected",
+            "legendFormat": "Connections"
+          }]
+        },
+        {
+          "id": 4,
+          "title": "Memory Usage — Backend Pod",
+          "type": "graph",
+          "gridPos": { "x": 6, "y": 8, "w": 18, "h": 4 },
+          "targets": [{
+            "expr": "container_memory_usage_bytes{namespace='budget-tracker', container='backend'}",
+            "legendFormat": "Memory"
+          }]
+        },
+        {
+          "id": 5,
+          "title": "SQS Messages in Queue",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 12, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "aws_sqs_approximate_number_of_messages_visible_average",
+            "legendFormat": "Queued"
+          }]
+        },
+        {
+          "id": 6,
+          "title": "Istio — Request Success Rate",
+          "type": "stat",
+          "gridPos": { "x": 6, "y": 12, "w": 6, "h": 4 },
+          "targets": [{
+            "expr": "sum(rate(istio_requests_total{destination_service_namespace='budget-tracker',response_code!~'5.*'}[5m])) / sum(rate(istio_requests_total{destination_service_namespace='budget-tracker'}[5m])) * 100",
+            "legendFormat": "Success %"
+          }]
+        }
+      ]
+    }
+
+---
+# ── Persistent storage for dashboards ────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp2
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+# ── Grafana Deployment ────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      securityContext:
+        fsGroup: 472             # Grafana requires this GID for volume mounts
+        runAsUser: 472
+      containers:
+        - name: grafana
+          image: grafana/grafana:10.2.0
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-credentials
+                  key: admin-user
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: grafana-credentials
+                  key: admin-password
+            - name: GF_PATHS_PROVISIONING
+              value: /etc/grafana/provisioning
+            # Disable sign-up — only admin can add users
+            - name: GF_USERS_ALLOW_SIGN_UP
+              value: "false"
+            - name: GF_SERVER_ROOT_URL
+              value: "http://grafana.monitoring.svc.cluster.local:3000"
+          volumeMounts:
+            - name: storage
+              mountPath: /var/lib/grafana
+            - name: datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: dashboard-config
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: dashboard-files
+              mountPath: /var/lib/grafana/dashboards
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "300m"
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: grafana-pvc
+        - name: datasources
+          configMap:
+            name: grafana-datasources
+        - name: dashboard-config
+          configMap:
+            name: grafana-dashboards-config
+        - name: dashboard-files
+          configMap:
+            name: grafana-dashboard-budget
+
+---
+# ── Grafana Service ───────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: monitoring
+  labels:
+    app: grafana
+spec:
+  selector:
+    app: grafana
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP

@@ -23,7 +23,7 @@ spec:
             prefix: /
       route:
         - destination:
-            host: frontend-service
+            host: frontend
             port:
               number: 80
 
@@ -42,9 +42,9 @@ spec:
   http:
     - route:
         - destination:
-            host: backend-service
+            host: backend
             port:
-              number: 3000
+              number: 80
       timeout: 30s
       retries:
         attempts: 3

@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app-deployment
+  name: backend
+  namespace: budget-tracker
   labels:
-    app: my-app
+    app: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: my-app
+      app: backend
   template:
     metadata:
       labels:
-        app: my-app
-        # This injects the Istio Envoy sidecar
+        app: backend
         sidecar.istio.io/inject: "true" 
     spec:
       containers:
-      - name: my-app-container
+      - name: backend-container
         # GitHub Actions will replace this placeholder with the real image tag
         image: BACKEND_IMAGE_PLACEHOLDER
         ports:
@@ -41,12 +41,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-app
+  name: backend
+  namespace: budget-tracker
   labels:
-    app: my-app
+    app: backend
 spec:
   selector:
-    app: my-app
+    app: backend
   ports:
   - port: 80
     targetPort: 3000

@@ -54,20 +54,12 @@ jobs:
       run: |
         aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
-    - name: Get RDS hostname from Terraform state
-      id: rds
-      working-directory: Backend/terraform
-      run: |
-        terraform init -input=false
-        RDS_HOST=$(terraform output -raw rds_hostname)
-        echo "host=$RDS_HOST" >> $GITHUB_OUTPUT
-
     - name: Deploy to EKS
       env:
         BACKEND_IMAGE:  ${{ steps.build-image.outputs.backend_image }}
         FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
         NS: ${{ env.K8S_NAMESPACE }}
-        RDS_HOST: ${{ steps.rds.outputs.host }}
+        RDS_HOST: ${{ secrets.RDS_HOST }}
       run: |
         set -e  # stop on first error and show which command failed
         # Inject real RDS host into deployment manifest

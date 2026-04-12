@@ -1,0 +1,24 @@
+# ============================================================
+#  k8s/gateway.yaml
+#  HTTP only — add HTTPS servers after TLS certs are provisioned
+# ============================================================
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: budget-gateway
+  namespace: budget-tracker
+spec:
+  selector:
+    app: istio-ingress
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "PhongKieuTele.id.vn"
+    - "www.PhongKieuTele.id.vn"
+    - "api.PhongKieuTele.id.vn"
+    - "grafana.PhongKieuTele.id.vn"
+    - "prometheus.PhongKieuTele.id.vn"
+    - "splunk.PhongKieuTele.id.vn"

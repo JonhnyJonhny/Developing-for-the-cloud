@@ -60,6 +60,7 @@ jobs:
         FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
         NS: ${{ env.K8S_NAMESPACE }}
       run: |
+        set -e  # stop on first error and show which command failed
         # Ensure namespace exists with Istio injection enabled
         kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
         kubectl label namespace $NS istio-injection=enabled --overwrite

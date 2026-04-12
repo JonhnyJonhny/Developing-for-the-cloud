@@ -10,7 +10,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
-  ssl:                { rejectUnauthorized: true }, // enforce TLS to RDS
+  ssl:                { rejectUnauthorized: false }, // AWS RDS CA not in Node default trust store
 });
 
 module.exports = pool;

@@ -1,49 +1,498 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Budget App - Live!</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-        }
-        h1 { color: #2c3e50; }
-        .success-badge {
-            background-color: #2ecc71;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        p { line-height: 1.6; color: #666; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <div class="success-badge">✓ Connection Successful</div>
-        <h1>Budget App is Live!</h1>
-        <p>If you are seeing this page, it means your AWS EKS Cluster, Istio Load Balancer, and Route 53 DNS are all perfectly connected.</p>
-        <p><strong>Next Step:</strong> Replace this placeholder with your actual frontend code!</p>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0d0f10" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-text">Trackr</div>
+          <div class="logo-sub">Budget Manager</div>
+        </div>
+      </div>
     </div>
+
+    <nav class="nav">
+      <div class="nav-label">Main</div>
+      <button class="nav-item active" onclick="showPage('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('transactions', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Transactions
+        <span class="badge" id="tx-badge">7</span>
+      </button>
+
+      <div class="nav-label">Tools</div>
+      <button class="nav-item" onclick="showPage('reports', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+        Reports
+      </button>
+      <button class="nav-item" onclick="showPage('alerts', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Alerts
+        <span class="badge" id="alert-badge">2</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">KP</div>
+        <div>
+          <div class="user-name">Kiều Phong</div>
+          <div class="user-plan">Pro Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+
+    <!-- Dashboard -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Phong</div>
+          <div class="page-sub">April 2026 — Here's your financial overview</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add transaction
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-dot" style="background:var(--green)"></div>
+          <div class="stat-label">Current balance</div>
+          <div class="stat-value" id="stat-balance">£3,262</div>
+          <div class="stat-change up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+            +12% vs last month
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-dot" style="background:var(--blue)"></div>
+          <div class="stat-label">Monthly income</div>
+          <div class="stat-value" id="stat-income">£5,200</div>
+          <div class="stat-change up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+            Salary received
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-dot" style="background:var(--red)"></div>
+          <div class="stat-label">Total expenses</div>
+          <div class="stat-value" id="stat-expenses">£1,938</div>
+          <div class="stat-change down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 7l9.2 9.2M17 7v10H7"/></svg>
+            +8% vs last month
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-dot" style="background:var(--amber)"></div>
+          <div class="stat-label">Savings rate</div>
+          <div class="stat-value" id="stat-savings">62%</div>
+          <div class="stat-change up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+            On track
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <!-- Area Chart -->
+        <div class="card">
+          <div class="card-title">Income vs Expenses</div>
+          <div class="card-sub">6-month overview — Jan to Jun 2026</div>
+          <div class="chart-area">
+            <svg viewBox="0 0 500 200" id="area-chart">
+              <defs>
+                <linearGradient id="gIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2dd4a0" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#2dd4a0" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="gExpense" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#f26b50" stop-opacity="0.2"/>
+                  <stop offset="100%" stop-color="#f26b50" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <line x1="40" y1="10" x2="490" y2="10" stroke="#1a1d1f" stroke-width="1"/>
+              <line x1="40" y1="50" x2="490" y2="50" stroke="#1a1d1f" stroke-width="1"/>
+              <line x1="40" y1="90" x2="490" y2="90" stroke="#1a1d1f" stroke-width="1"/>
+              <line x1="40" y1="130" x2="490" y2="130" stroke="#1a1d1f" stroke-width="1"/>
+              <line x1="40" y1="165" x2="490" y2="165" stroke="#1a1d1f" stroke-width="1"/>
+              <text x="35" y="14" fill="#5e5e5a" font-size="10" text-anchor="end">£7k</text>
+              <text x="35" y="54" fill="#5e5e5a" font-size="10" text-anchor="end">£6k</text>
+              <text x="35" y="94" fill="#5e5e5a" font-size="10" text-anchor="end">£5k</text>
+              <text x="35" y="134" fill="#5e5e5a" font-size="10" text-anchor="end">£4k</text>
+              <text x="35" y="168" fill="#5e5e5a" font-size="10" text-anchor="end">£3k</text>
+              <path d="M70,86 L150,86 L230,56 L310,86 L390,35 L470,86 L470,165 L70,165 Z" fill="url(#gIncome)"/>
+              <path d="M70,86 L150,86 L230,56 L310,86 L390,35 L470,86" fill="none" stroke="#2dd4a0" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M70,141 L150,124 L230,155 L310,111 L390,136 L470,120 L470,165 L70,165 Z" fill="url(#gExpense)"/>
+              <path d="M70,141 L150,124 L230,155 L310,111 L390,136 L470,120" fill="none" stroke="#f26b50" stroke-width="2" stroke-linejoin="round"/>
+              <circle cx="70" cy="86" r="3" fill="#2dd4a0"/>
+              <circle cx="150" cy="86" r="3" fill="#2dd4a0"/>
+              <circle cx="230" cy="56" r="3" fill="#2dd4a0"/>
+              <circle cx="310" cy="86" r="3" fill="#2dd4a0"/>
+              <circle cx="390" cy="35" r="3" fill="#2dd4a0"/>
+              <circle cx="470" cy="86" r="3" fill="#2dd4a0"/>
+              <circle cx="70" cy="141" r="3" fill="#f26b50"/>
+              <circle cx="150" cy="124" r="3" fill="#f26b50"/>
+              <circle cx="230" cy="155" r="3" fill="#f26b50"/>
+              <circle cx="310" cy="111" r="3" fill="#f26b50"/>
+              <circle cx="390" cy="136" r="3" fill="#f26b50"/>
+              <circle cx="470" cy="120" r="3" fill="#f26b50"/>
+              <text x="70" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">Jan</text>
+              <text x="150" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">Feb</text>
+              <text x="230" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">Mar</text>
+              <text x="310" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">Apr</text>
+              <text x="390" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">May</text>
+              <text x="470" y="178" fill="#5e5e5a" font-size="10" text-anchor="middle">Jun</text>
+              <circle cx="60" cy="195" r="4" fill="#2dd4a0"/>
+              <text x="68" y="199" fill="#9a9a96" font-size="10">Income</text>
+              <circle cx="120" cy="195" r="4" fill="#f26b50"/>
+              <text x="128" y="199" fill="#9a9a96" font-size="10">Expenses</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Donut -->
+        <div class="card">
+          <div class="card-title">Spending breakdown</div>
+          <div class="card-sub">By category this month</div>
+          <div class="donut-wrap">
+            <svg width="110" height="110" viewBox="0 0 110 110">
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#202326" stroke-width="18"/>
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#5b9cf6" stroke-width="18" stroke-dasharray="85 166" stroke-dashoffset="0" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#2dd4a0" stroke-width="18" stroke-dasharray="41.5 209.5" stroke-dashoffset="-85" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#a78bfa" stroke-width="18" stroke-dasharray="33 218" stroke-dashoffset="-126.5" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#f26b50" stroke-width="18" stroke-dasharray="19.6 231.4" stroke-dashoffset="-159.5" transform="rotate(-90 55 55)"/>
+              <circle cx="55" cy="55" r="40" fill="none" stroke="#f5a623" stroke-width="18" stroke-dasharray="11 240" stroke-dashoffset="-179.1" transform="rotate(-90 55 55)"/>
+              <text x="55" y="51" fill="#f0f0ee" font-size="13" font-weight="600" text-anchor="middle" font-family="Syne">£4,120</text>
+              <text x="55" y="64" fill="#5e5e5a" font-size="9" text-anchor="middle" font-family="DM Sans">total spent</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="legend-item"><div class="legend-dot" style="background:#5b9cf6"></div>Housing<span class="legend-val">£1,400</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#2dd4a0"></div>Food<span class="legend-val">£680</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Shopping<span class="legend-val">£540</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#f26b50"></div>Transport<span class="legend-val">£320</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background:#f5a623"></div>Utilities<span class="legend-val">£180</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-row">
+        <!-- Budget progress -->
+        <div class="card">
+          <div class="card-title">Budget progress</div>
+          <div class="card-sub">April 2026 limits</div>
+          <div class="budget-item">
+            <div class="budget-row">
+              <div class="budget-cat"><div class="cat-dot" style="background:#5b9cf6"></div>Housing</div>
+              <div class="budget-amounts"><span>£1,400</span> / £1,500</div>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:93%;background:#5b9cf6"></div></div>
+          </div>
+          <div class="budget-item">
+            <div class="budget-row">
+              <div class="budget-cat"><div class="cat-dot" style="background:#2dd4a0"></div>Food</div>
+              <div class="budget-amounts"><span>£680</span> / £700</div>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:97%;background:#2dd4a0"></div></div>
+          </div>
+          <div class="budget-item">
+            <div class="budget-row">
+              <div class="budget-cat"><div class="cat-dot" style="background:#f26b50"></div>Transport</div>
+              <div class="budget-amounts"><span style="color:var(--red)">£320</span> / £300</div>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:100%;background:#f26b50"></div></div>
+          </div>
+          <div class="budget-item">
+            <div class="budget-row">
+              <div class="budget-cat"><div class="cat-dot" style="background:#a78bfa"></div>Shopping</div>
+              <div class="budget-amounts"><span>£540</span> / £600</div>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:90%;background:#a78bfa"></div></div>
+          </div>
+          <div class="budget-item">
+            <div class="budget-row">
+              <div class="budget-cat"><div class="cat-dot" style="background:#f5a623"></div>Utilities</div>
+              <div class="budget-amounts"><span>£180</span> / £200</div>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width:90%;background:#f5a623"></div></div>
+          </div>
+        </div>
+
+        <!-- Recent transactions -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div class="card-title">Recent transactions</div>
+            <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" onclick="showPage('transactions', document.querySelectorAll('.nav-item')[1])">View all</button>
+          </div>
+          <div class="card-sub">Last 5 entries</div>
+          <div id="recent-tx-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transactions Page -->
+    <div id="page-transactions" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">All transactions</div>
+          <div class="page-sub">Full history — <span id="tx-count">7</span> entries</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Add transaction
+        </button>
+      </div>
+
+      <div class="search-bar">
+        <div class="search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        </div>
+        <input type="text" placeholder="Search transactions..." oninput="filterTx(this.value)">
+      </div>
+
+      <div class="tx-filters">
+        <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+        <button class="filter-btn" onclick="setFilter('income', this)">Income</button>
+        <button class="filter-btn" onclick="setFilter('expense', this)">Expenses</button>
+        <button class="filter-btn" onclick="setFilter('housing', this)">Housing</button>
+        <button class="filter-btn" onclick="setFilter('food', this)">Food</button>
+        <button class="filter-btn" onclick="setFilter('transport', this)">Transport</button>
+      </div>
+
+      <div class="card" style="padding:0 22px">
+        <div id="full-tx-list"></div>
+      </div>
+    </div>
+
+    <!-- Reports Page -->
+    <div id="page-reports" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Report generator</div>
+          <div class="page-sub">Powered by AWS Lambda · SQS · SNS · RDS MySQL</div>
+        </div>
+      </div>
+
+      <div class="pipeline-banner">
+        <div class="pipeline-title">AWS Microservices Pipeline</div>
+        <div class="pipeline-desc">Reports are processed asynchronously. Your request is queued via SQS, picked up by a Lambda function that queries your MySQL RDS instance, then delivered to your inbox via SNS.</div>
+        <div class="pipeline-flow">
+          <span class="pipe-tag">API Gateway</span><span class="pipe-arrow">→</span>
+          <span class="pipe-tag">SQS Queue</span><span class="pipe-arrow">→</span>
+          <span class="pipe-tag">Lambda</span><span class="pipe-arrow">→</span>
+          <span class="pipe-tag">RDS MySQL</span><span class="pipe-arrow">→</span>
+          <span class="pipe-tag">S3 Storage</span><span class="pipe-arrow">→</span>
+          <span class="pipe-tag">SNS Notify</span>
+        </div>
+      </div>
+
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2)">SELECT REPORT TYPE</div>
+
+      <div class="report-grid">
+        <button class="report-option selected" onclick="selectReport(this,'monthly')">
+          <div class="report-option-title">Monthly summary</div>
+          <div class="report-option-desc">Full breakdown by category and month</div>
+        </button>
+        <button class="report-option" onclick="selectReport(this,'category')">
+          <div class="report-option-title">Category analysis</div>
+          <div class="report-option-desc">Deep dive into spending per category</div>
+        </button>
+        <button class="report-option" onclick="selectReport(this,'trends')">
+          <div class="report-option-title">Spending trends</div>
+          <div class="report-option-desc">6-month analysis with forecasting</div>
+        </button>
+        <button class="report-option" onclick="selectReport(this,'tax')">
+          <div class="report-option-title">Tax report</div>
+          <div class="report-option-desc">Annual income and deductions summary</div>
+        </button>
+      </div>
+
+      <div class="settings-card">
+        <div class="card-title" style="margin-bottom:14px">Report settings</div>
+        <div class="settings-row">
+          <div class="field">
+            <label>Date range</label>
+            <select>
+              <option>April 2026</option>
+              <option>Last 3 months</option>
+              <option>Last 6 months</option>
+              <option>Year to date 2026</option>
+              <option>Custom range</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Output format</label>
+            <select>
+              <option>PDF Document</option>
+              <option>CSV Spreadsheet</option>
+              <option>Excel (.xlsx)</option>
+              <option>JSON</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Delivery method</label>
+            <select>
+              <option>Email (via SNS)</option>
+              <option>Download directly</option>
+              <option>Save to S3</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Include charts</label>
+            <select>
+              <option>Yes — visual charts</option>
+              <option>No — data only</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline Status -->
+      <div class="status-card" id="status-card">
+        <div class="card-title" style="margin-bottom:14px">Pipeline status</div>
+        <div class="status-step">
+          <div class="step-icon pending" id="step1-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="step-label"><div class="step-name" id="step1-name">Awaiting request</div><div class="step-detail">POST /api/reports → API Gateway</div></div>
+          <div class="step-time" id="step1-time"></div>
+        </div>
+        <div class="status-step">
+          <div class="step-icon pending" id="step2-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="step-label"><div class="step-name" id="step2-name">SQS queue</div><div class="step-detail">Message enqueued for async processing</div></div>
+          <div class="step-time" id="step2-time"></div>
+        </div>
+        <div class="status-step">
+          <div class="step-icon pending" id="step3-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="step-label"><div class="step-name" id="step3-name">Lambda processing</div><div class="step-detail">Querying RDS MySQL · Building report</div></div>
+          <div class="step-time" id="step3-time"></div>
+        </div>
+        <div class="status-step">
+          <div class="step-icon pending" id="step4-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="step-label"><div class="step-name" id="step4-name">S3 upload</div><div class="step-detail">Storing report file to S3 bucket</div></div>
+          <div class="step-time" id="step4-time"></div>
+        </div>
+        <div class="status-step">
+          <div class="step-icon pending" id="step5-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+          <div class="step-label"><div class="step-name" id="step5-name">SNS notification</div><div class="step-detail">Email delivery to kieuphong@email.com</div></div>
+          <div class="step-time" id="step5-time"></div>
+        </div>
+      </div>
+
+      <button class="generate-btn" id="gen-btn" onclick="generateReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        Generate report
+      </button>
+    </div>
+
+    <!-- Alerts Page -->
+    <div id="page-alerts" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Budget alerts</div>
+          <div class="page-sub">Notifications and spending warnings</div>
+        </div>
+        <button class="btn btn-secondary" onclick="document.getElementById('alert-badge').style.display='none'; showToast('All alerts cleared','success')">Clear all</button>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:36px;height:36px;border-radius:var(--radius);background:var(--red-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13.5px;font-weight:500;margin-bottom:4px">Transport budget exceeded</div>
+            <div style="font-size:12px;color:var(--text3)">You have spent £320 against a £300 budget this month.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:8px">Today · 09:42 AM</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="width:36px;height:36px;border-radius:var(--radius);background:var(--amber-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <div>
+            <div style="font-size:13.5px;font-weight:500;margin-bottom:4px">Food budget at 97%</div>
+            <div style="font-size:12px;color:var(--text3)">You have used £680 of your £700 food budget. Only £20 remaining.</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:8px">Yesterday · 06:15 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add transaction</div>
+      <button class="close-btn" onclick="closeModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="type-toggle">
+      <button class="type-btn active-expense" id="btn-expense" onclick="setTxType('expense')">Expense</button>
+      <button class="type-btn" id="btn-income" onclick="setTxType('income')">Income</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input type="text" id="tx-name" placeholder="e.g. Grocery shopping">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Amount (£)</label>
+      <input type="number" id="tx-amount" placeholder="0.00" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Category</label>
+      <select id="tx-category">
+        <option>Food</option>
+        <option>Housing</option>
+        <option>Transport</option>
+        <option>Shopping</option>
+        <option>Utilities</option>
+        <option>Entertainment</option>
+        <option>Health</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px" onclick="addTransaction()">Add transaction</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-icon">
+    <svg id="toast-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+    </svg>
+  </div>
+  <span id="toast-msg">Done</span>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

@@ -20,12 +20,16 @@ spec:
       containers:
       - name: my-app-container
         # GitHub Actions will replace this placeholder with the real image tag
-        image: ${{ secrets.DOCKERHUB_USERNAME }}/my-app:IMAGE_TAG_PLACEHOLDER
+        image: BACKEND_IMAGE_PLACEHOLDER
         ports:
-        - containerPort: 8080
+        - containerPort: 3000
         env:
         - name: DB_HOST
-          value: "your-rds-endpoint.amazonaws.com" # Your Terraform RDS output
+          value: "your-rds-endpoint.amazonaws.com" # Replace with: terraform output rds_endpoint
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "appdb"
         - name: DB_USER
           value: "admin"
         - name: DB_PASSWORD
@@ -45,5 +49,5 @@ spec:
     app: my-app
   ports:
   - port: 80
-    targetPort: 8080
+    targetPort: 3000
   type: ClusterIP

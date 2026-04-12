@@ -1,0 +1,52 @@
+# ============================================================
+#  .github/workflows/cleanup.yml
+#
+#  Manually triggered from GitHub Actions UI
+#  Tears down the staging namespace to save AWS costs
+# ============================================================
+
+name: Cleanup — Tear down staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DESTROY to confirm staging teardown"
+        required: true
+        type: string
+
+env:
+  AWS_REGION:    ap-southeast-1
+  EKS_CLUSTER:   budget-tracker-cluster
+  K8S_NAMESPACE: budget-tracker-staging
+
+jobs:
+  destroy-staging:
+    name: Delete staging namespace
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm == 'DESTROY'
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region:            ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name   ${{ env.EKS_CLUSTER }}
+
+      - name: Delete staging namespace
+        run: |
+          kubectl delete namespace ${{ env.K8S_NAMESPACE }} \
+            --ignore-not-found=true
+          echo "Staging namespace deleted"
+
+      - name: Cleanup summary
+        run: |
+          echo "### Staging namespace deleted"                   >> $GITHUB_STEP_SUMMARY
+          echo "Namespace \`${{ env.K8S_NAMESPACE }}\` removed." >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,71 @@
+# application/.github/workflows/deploy.yml
+name: Build and Deploy to EKS
+
+on:
+  push:
+    branches:
+      - main # Triggers the workflow on push to the main branch
+
+env:
+  AWS_REGION: us-east-1
+  EKS_CLUSTER_NAME: budget-app-cluster
+  # Set your Docker Hub repository details here
+  DOCKER_IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/my-modern-app 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push Docker images
+      id: build-image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        BACKEND_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/budget-backend:$IMAGE_TAG
+        FRONTEND_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/budget-frontend:$IMAGE_TAG
+
+        docker build -f Dockerfile.backend  -t $BACKEND_IMAGE  .
+        docker push $BACKEND_IMAGE
+
+        docker build -f Dockerfile.frontend -t $FRONTEND_IMAGE .
+        docker push $FRONTEND_IMAGE
+
+        echo "backend_image=$BACKEND_IMAGE"   >> $GITHUB_OUTPUT
+        echo "frontend_image=$FRONTEND_IMAGE" >> $GITHUB_OUTPUT
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Update Kubeconfig
+      run: |
+        aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+    - name: Deploy to EKS
+      env:
+        BACKEND_IMAGE:  ${{ steps.build-image.outputs.backend_image }}
+        FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
+      run: |
+        # Inject real image tags into the backend manifest
+        sed -i "s|BACKEND_IMAGE_PLACEHOLDER|$BACKEND_IMAGE|g" \
+          Backend/applications/k8s/deployment.yaml
+
+        kubectl apply -f Backend/applications/k8s/deployment.yaml
+
+        # Deploy frontend manifests
+        sed -e "s|budget-frontend:latest|$FRONTEND_IMAGE|g" \
+          Backend/applications/k8s/frontend-deployment.yaml | kubectl apply -f -
+        kubectl apply -f Backend/applications/k8s/frontend-service.yaml

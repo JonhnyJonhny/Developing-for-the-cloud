@@ -1,0 +1,93 @@
+# ============================================================
+#  k8s/monitoring/namespace.yaml
+#  Creates the monitoring namespace and Istio routing so you
+#  can access Grafana, Prometheus and Splunk through the
+#  same Istio ingress gateway as the main app
+# ============================================================
+
+---
+# ── Monitoring namespace ──────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    # Prometheus and Splunk don't need sidecars
+    # but Grafana can optionally have one
+    istio-injection: disabled
+
+---
+# ── Istio VirtualService — route to monitoring tools ─────────
+# Access via:
+#   http://<your-gateway-ip>/grafana
+#   http://<your-gateway-ip>/prometheus
+#   http://<your-gateway-ip>/splunk
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: monitoring-vs
+  namespace: monitoring
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - budget-tracker/budget-gateway    # Reuse the existing app gateway
+  http:
+    # ── Grafana ──
+    - match:
+        - uri:
+            prefix: /grafana
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: grafana-service.monitoring.svc.cluster.local
+            port:
+              number: 3000
+
+    # ── Prometheus ──
+    - match:
+        - uri:
+            prefix: /prometheus
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: prometheus-service.monitoring.svc.cluster.local
+            port:
+              number: 9090
+
+    # ── Splunk Web UI ──
+    - match:
+        - uri:
+            prefix: /splunk
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: splunk-service.monitoring.svc.cluster.local
+            port:
+              number: 8000
+
+---
+# ── NetworkPolicy — only allow traffic from monitoring namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: monitoring-policy
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: budget-tracker

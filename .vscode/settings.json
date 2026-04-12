@@ -1,0 +1,21 @@
+{
+    "sqltools.connections": [
+        {
+            "connectionTimeout": 15,
+            "mssqlOptions": {
+                "appName": "SQLTools",
+                "useUTC": true,
+                "encrypt": true,
+                "trustServerCertificate": false
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "app-db-mysql.c8jo6wu68yvi.us-east-1.rds.amazonaws.com:3306",
+            "port": 1433,
+            "askForPassword": true,
+            "driver": "MSSQL",
+            "name": "app_db",
+            "username": "admin"
+        }
+    ]
+}

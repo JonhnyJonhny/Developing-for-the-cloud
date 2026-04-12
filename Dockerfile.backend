@@ -2,9 +2,8 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY Backend/package*.json ./
-COPY Backend/package-lock.json ./
 
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 FROM node:18-alpine
 

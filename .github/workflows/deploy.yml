@@ -54,13 +54,26 @@ jobs:
       run: |
         aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
 
+    - name: Get RDS hostname from Terraform state
+      id: rds
+      working-directory: Backend/terraform
+      run: |
+        terraform init -input=false
+        RDS_HOST=$(terraform output -raw rds_hostname)
+        echo "host=$RDS_HOST" >> $GITHUB_OUTPUT
+
     - name: Deploy to EKS
       env:
         BACKEND_IMAGE:  ${{ steps.build-image.outputs.backend_image }}
         FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
         NS: ${{ env.K8S_NAMESPACE }}
+        RDS_HOST: ${{ steps.rds.outputs.host }}
       run: |
         set -e  # stop on first error and show which command failed
+        # Inject real RDS host into deployment manifest
+        sed -i "s|your-rds-endpoint.amazonaws.com|$RDS_HOST|g" \
+          Backend/applications/k8s/deployment.yaml
+
         # Ensure namespace exists with Istio injection enabled
         kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
         kubectl label namespace $NS istio-injection=enabled --overwrite

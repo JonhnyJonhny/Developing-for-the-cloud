@@ -1,34 +1,32 @@
-// routes/reports.js — queues a report generation job into SQS
-const express  = require("express");
-const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-const { randomUUID } = require("crypto");
+// routes/reports.js — generates a CSV report and streams it as a download
+const express = require("express");
+const pool    = require("../db");
 
 const router = express.Router();
-const sqs    = new SQSClient({ region: process.env.AWS_REGION || "us-east-1" });
 
-// POST /api/reports
-router.post("/", async (req, res) => {
-  const { userEmail, reportType = "monthly" } = req.body;
-
-  if (!userEmail) {
-    return res.status(400).json({ error: "userEmail is required" });
-  }
-
-  const requestId = randomUUID();
-
+// GET /api/reports/download
+router.get("/download", async (req, res) => {
   try {
-    await sqs.send(new SendMessageCommand({
-      QueueUrl:    process.env.SQS_QUEUE_URL,
-      MessageBody: JSON.stringify({ userEmail, reportType, requestId }),
-    }));
+    const [rows] = await pool.query(
+      "SELECT id, name, category, amount, type, icon, created_at FROM transactions ORDER BY created_at DESC"
+    );
 
-    res.status(202).json({
-      requestId,
-      message: "Report queued — you will receive an email when it is ready",
-    });
+    const headers = ["id", "name", "category", "amount", "type", "icon", "created_at"];
+    const csv = [
+      headers.join(","),
+      ...rows.map(r =>
+        headers.map(h => JSON.stringify(r[h] ?? "")).join(",")
+      ),
+    ].join("\n");
+
+    const filename = `budget-report-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.status(200).send(csv);
   } catch (err) {
-    console.error("SQS send failed:", err);
-    res.status(500).json({ error: "Failed to queue report" });
+    console.error("Report generation failed:", err);
+    res.status(500).json({ error: "Failed to generate report" });
   }
 });
 

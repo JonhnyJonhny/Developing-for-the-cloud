@@ -52,16 +52,3 @@ resource "aws_iam_role_policy_attachment" "eks_ecr" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   role       = aws_iam_role.node_role.name
 }
-
-resource "aws_iam_role_policy" "node_sqs_send" {
-  name = "eks-node-sqs-send"
-  role = aws_iam_role.node_role.id
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["sqs:SendMessage", "sqs:GetQueueUrl"]
-      Resource = aws_sqs_queue.report_jobs.arn
-    }]
-  })
-}

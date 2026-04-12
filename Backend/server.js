@@ -19,7 +19,9 @@ app.get("/health", async (_req, res) => {
 
 // Import and mount route modules
 const transactionRoutes = require("./routes/transactions");
+const reportRoutes      = require("./routes/reports");
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.listen(PORT, () => {
   console.log(`Backend listening on port ${PORT}`);

@@ -242,51 +242,75 @@ async function generateReport() {
     Processing...`;
 
   const steps = [
-    { id: 1, name: "Request received",      time: 800  },
-    { id: 2, name: "Queued in SQS",         time: 1400 },
-    { id: 3, name: "Lambda executing",      time: 2800 },
-    { id: 4, name: "Saved to S3",           time: 1200 },
-    { id: 5, name: "SNS notification sent", time: 600  },
+    { id: 1, name: "Sending request to API" },
+    { id: 2, name: "Queued in SQS"          },
+    { id: 3, name: "Lambda executing"        },
+    { id: 4, name: "Saved to S3"             },
+    { id: 5, name: "SNS notification sent"   },
   ];
 
-  for (const s of steps) {
-    const iconEl  = document.getElementById(`step${s.id}-icon`);
-    const nameEl  = document.getElementById(`step${s.id}-name`);
-
-    /* Active (spinning) state */
+  // Animate step as active
+  function setActive(stepId, label) {
+    const iconEl = document.getElementById(`step${stepId}-icon`);
+    const nameEl = document.getElementById(`step${stepId}-name`);
     iconEl.className = "step-icon active";
-    iconEl.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" class="spinning">
-        <path d="M21 12a9 9 0 11-6.219-8.56"/>
-      </svg>`;
-    nameEl.textContent = s.name;
-    showToast(s.name + "...", "info");
-
-    /* Simulate async work */
-    await new Promise(r => setTimeout(r, s.time));
-
-    /* Done state */
-    iconEl.className = "step-icon done";
-    iconEl.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5">
-        <polyline points="20 6 9 17 4 12"/>
-      </svg>`;
-    document.getElementById(`step${s.id}-time`).textContent = "✓";
+    iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" class="spinning"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>`;
+    nameEl.textContent = label;
+    showToast(label + "...", "info");
   }
 
-  /* Bump alert badge */
-  const alertBadge = document.getElementById("alert-badge");
-  alertBadge.textContent = (parseInt(alertBadge.textContent) || 0) + 1;
+  // Animate step as done
+  function setDone(stepId) {
+    const iconEl = document.getElementById(`step${stepId}-icon`);
+    iconEl.className = "step-icon done";
+    iconEl.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+    document.getElementById(`step${stepId}-time`).textContent = "✓";
+  }
 
-  showToast("Report ready! Check your email.", "success");
+  try {
+    // Step 1 — call backend API
+    setActive(1, steps[0].name);
+    const res = await fetch("/api/reports", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        userEmail:  "kieuphong@email.com",
+        reportType: "monthly",
+      }),
+    });
+
+    if (!res.ok) throw new Error(`API error ${res.status}`);
+    setDone(1);
+
+    // Steps 2-5 — animate pipeline stages while Lambda processes
+    const delays = [1200, 2500, 1500, 800];
+    for (let i = 1; i < steps.length; i++) {
+      setActive(i + 1, steps[i].name);
+      await new Promise(r => setTimeout(r, delays[i - 1]));
+      setDone(i + 1);
+    }
+
+    const alertBadge = document.getElementById("alert-badge");
+    alertBadge.textContent = (parseInt(alertBadge.textContent) || 0) + 1;
+
+    showToast("Report queued! Check your email shortly.", "success");
+
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+      </svg>
+      Generate another report`;
+
+  } catch (err) {
+    showToast("Failed to generate report: " + err.message, "warning");
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px">
+        <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+      </svg>
+      Retry`;
+  }
 
   btn.disabled  = false;
-  btn.innerHTML = `
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:16px;height:16px">
-      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-    </svg>
-    Generate another report`;
-
   reportInProgress = false;
 }
 

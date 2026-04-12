@@ -1,83 +1,82 @@
 # ============================================================
-#  k8s/monitoring/namespace.yaml
-#  Creates the monitoring namespace and Istio routing so you
-#  can access Grafana, Prometheus and Splunk through the
-#  same Istio ingress gateway as the main app
+#  k8s/monitoring/prometheus.yaml
 # ============================================================
 
 ---
-# ── Monitoring namespace ──────────────────────────────────────
+# ── ConfigMap — prometheus.yml config ────────────────────────
 apiVersion: v1
-kind: Namespace
+kind: ConfigMap
 metadata:
-  name: monitoring
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'budget-backend'
+        static_configs:
+          - targets: ['backend.budget-tracker.svc.cluster.local:80']
+
+---
+# ── Prometheus Deployment ─────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
   labels:
-    # Prometheus and Splunk don't need sidecars
-    # but Grafana can optionally have one
-    istio-injection: disabled
+    app: prometheus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+      - name: prometheus
+        image: prom/prometheus:v2.51.2
+        args:
+          - "--config.file=/etc/prometheus/prometheus.yml"
+          - "--storage.tsdb.retention.time=7d"
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: config
+          mountPath: /etc/prometheus
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: config
+        configMap:
+          name: prometheus-config
 
 ---
-# ── Istio VirtualService — route to monitoring tools ─────────
-# Access via:
-#   http://<your-gateway-ip>/grafana
-#   http://<your-gateway-ip>/prometheus
-#   http://<your-gateway-ip>/splunk
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
+# ── Prometheus Service ────────────────────────────────────────
+apiVersion: v1
+kind: Service
 metadata:
-  name: monitoring-vs
+  name: prometheus-service
   namespace: monitoring
+  labels:
+    app: prometheus
 spec:
-  hosts:
-    - "*"
-  gateways:
-    - budget-tracker/budget-gateway    # Reuse the existing app gateway
-  http:
-    # ── Grafana ──
-    - match:
-        - uri:
-            prefix: /grafana
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: grafana-service.monitoring.svc.cluster.local
-            port:
-              number: 3000
+  selector:
+    app: prometheus
+  ports:
+  - port: 9090
+    targetPort: 9090
+  type: ClusterIP
 
-    # ── Prometheus ──
-    - match:
-        - uri:
-            prefix: /prometheus
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: prometheus-service.monitoring.svc.cluster.local
-            port:
-              number: 9090
-
-    # ── Splunk Web UI ──
-    - match:
-        - uri:
-            prefix: /splunk
-      rewrite:
-        uri: /
-      route:
-        - destination:
-            host: splunk-service.monitoring.svc.cluster.local
-            port:
-              number: 8000
-
----
-# ── NetworkPolicy — only allow traffic from monitoring namespace
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: monitoring-policy
-  namespace: monitoring
-spec:
-  podSelector: {}
   policyTypes:
     - Ingress
   ingress:

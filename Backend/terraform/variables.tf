@@ -17,11 +17,6 @@ variable "db_username" {
   sensitive   = true
 }
 
-variable "report_email" {
-  description = "Email address to receive report-ready notifications via SNS"
-  type        = string
-}
-
 variable "db_password" {
   description = "Database administrator password"
   type        = string

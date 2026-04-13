@@ -60,24 +60,20 @@ jobs:
         FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
         NS: ${{ env.K8S_NAMESPACE }}
         RDS_HOST: ${{ secrets.RDS_HOST }}
-        SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
       run: |
         set -e  # stop on first error and show which command failed
         # Inject real RDS host into deployment manifest
         sed -i "s|your-rds-endpoint.amazonaws.com|$RDS_HOST|g" \
           Backend/applications/k8s/deployment.yaml
 
-        # Ensure namespace exists with Istio injection enabled
+        # Ensure namespaces exist
         kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
         kubectl label namespace $NS istio-injection=enabled --overwrite
+        kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 
-        # Create/update secrets
+        # Create/update db-credentials secret
         kubectl create secret generic db-credentials \
           --from-literal=password=${{ secrets.DB_PASSWORD }} \
-          --namespace=$NS --dry-run=client -o yaml | kubectl apply -f -
-
-        kubectl create secret generic app-config \
-          --from-literal=sqs_queue_url=$SQS_QUEUE_URL \
           --namespace=$NS --dry-run=client -o yaml | kubectl apply -f -
 
         # Inject real image tag into backend manifest and apply
@@ -97,8 +93,7 @@ jobs:
         kubectl apply -f Backend/applications/k8s/gateway.yaml
         kubectl apply -f Backend/applications/k8s/virtual-service.yaml
 
-        # Apply monitoring stack — non-blocking, namespace must exist first
-        kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+        # Apply monitoring stack
         kubectl apply -f Backend/applications/k8s/monitoring/namespace.yaml || echo "Warning: namespace.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/prometheus.yaml -n monitoring || echo "Warning: prometheus.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/grafana.yaml -n monitoring || echo "Warning: grafana.yaml had issues, continuing"

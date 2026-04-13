@@ -4,7 +4,7 @@
 #  Routes traffic based on hostname to the correct service
 # ============================================================
 
-# ── Main app — PhongKieuTele.id.vn ───────────────────────────
+#Main app — PhongKieuTele.id.vn
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -28,7 +28,7 @@ spec:
               number: 80
 
 ---
-# ── API — api.PhongKieuTele.id.vn ────────────────────────────
+#API — api.PhongKieuTele.id.vn 
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -51,59 +51,3 @@ spec:
         perTryTimeout: 10s
         retryOn: "5xx,reset,connect-failure"
 
----
-# ── Grafana — grafana.PhongKieuTele.id.vn ────────────────────
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: grafana-vs
-  namespace: monitoring
-spec:
-  hosts:
-    - "grafana.PhongKieuTele.id.vn"
-  gateways:
-    - budget-tracker/budget-gateway
-  http:
-    - route:
-        - destination:
-            host: grafana-service.monitoring.svc.cluster.local
-            port:
-              number: 3000
-
----
-# ── Prometheus — prometheus.PhongKieuTele.id.vn ──────────────
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: prometheus-vs
-  namespace: monitoring
-spec:
-  hosts:
-    - "prometheus.PhongKieuTele.id.vn"
-  gateways:
-    - budget-tracker/budget-gateway
-  http:
-    - route:
-        - destination:
-            host: prometheus-service.monitoring.svc.cluster.local
-            port:
-              number: 9090
-
----
-# ── Splunk — splunk.PhongKieuTele.id.vn ──────────────────────
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: splunk-vs
-  namespace: monitoring
-spec:
-  hosts:
-    - "splunk.PhongKieuTele.id.vn"
-  gateways:
-    - budget-tracker/budget-gateway
-  http:
-    - route:
-        - destination:
-            host: splunk-service.monitoring.svc.cluster.local
-            port:
-              number: 8000

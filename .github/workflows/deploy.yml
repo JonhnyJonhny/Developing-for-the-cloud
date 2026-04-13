@@ -98,3 +98,6 @@ jobs:
         kubectl apply -f Backend/applications/k8s/monitoring/prometheus.yaml -n monitoring || echo "Warning: prometheus.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/grafana.yaml -n monitoring || echo "Warning: grafana.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/splunk.yaml -n monitoring || echo "Warning: splunk.yaml had issues, continuing"
+
+        # Apply monitoring virtual services (namespace must exist first)
+        kubectl apply -f Backend/applications/k8s/monitoring-virtual-service.yaml

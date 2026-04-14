@@ -6,10 +6,10 @@ const router = express.Router();
 router.get("/download", async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT id, name, category, amount, type, icon, created_at FROM transactions ORDER BY created_at DESC"
+      "SELECT id, name, category, amount, type, created_at FROM transactions ORDER BY created_at DESC"
     );
 
-    const headers = ["id", "name", "category", "amount", "type", "icon", "created_at"];
+    const headers = ["id", "name", "category", "amount", "type", "created_at"];
     const csv = [
       headers.join(","),
       ...rows.map(r =>

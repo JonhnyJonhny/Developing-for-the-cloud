@@ -14,7 +14,9 @@ metadata:
   namespace: monitoring
 spec:
   hosts:
-    - "*"
+    - "grafana.PhongKieuTele.id.vn"
+    - "prometheus.PhongKieuTele.id.vn"
+    - "splunk.PhongKieuTele.id.vn"
   gateways:
     - budget-tracker/budget-gateway
   http:

@@ -6,7 +6,7 @@ metadata:
   namespace: monitoring
 type: Opaque
 stringData:
-  password: changeme
+  password: admin123!
 
 ---
 apiVersion: apps/v1
@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: splunk
-          image: splunk/splunk:latest
+          image: splunk/splunk:9.2.1
           ports:
             - containerPort: 8000
               name: web

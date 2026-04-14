@@ -8,7 +8,7 @@ spec:
     - "PhongKieuTele.id.vn"
     - "www.PhongKieuTele.id.vn"
   gateways:
-    - budget-gateway
+    - budget-tracker/budget-gateway
   http:
     - match:
         - uri:
@@ -29,7 +29,7 @@ spec:
   hosts:
     - "api.PhongKieuTele.id.vn"
   gateways:
-    - budget-gateway
+    - budget-tracker/budget-gateway
   http:
     - route:
         - destination:

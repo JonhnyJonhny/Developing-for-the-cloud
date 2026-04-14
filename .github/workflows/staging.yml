@@ -104,7 +104,7 @@ jobs:
             --from-literal=RDS_HOST="${{ secrets.STAGING_RDS_HOST }}"         \
             --from-literal=RDS_PORT="${{ secrets.RDS_PORT }}"                 \
             --from-literal=RDS_USER="${{ secrets.RDS_USER }}"                 \
-            --from-literal=RDS_PASSWORD="${{ secrets.DB_PASSWORD }}"         \
+            --from-literal=RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"         \
             --from-literal=RDS_DATABASE="budget_tracker_staging"              \
             --from-literal=SQS_QUEUE_URL="${{ secrets.STAGING_SQS_QUEUE_URL }}"\
             --from-literal=AWS_REGION="${{ env.AWS_REGION }}"                 \

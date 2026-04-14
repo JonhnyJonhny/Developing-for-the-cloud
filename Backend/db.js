@@ -1,4 +1,3 @@
-// db.js — MySQL2 connection pool using env vars injected by K8s
 const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
@@ -10,7 +9,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit:    10,
   queueLimit:         0,
-  ssl:                { rejectUnauthorized: false }, // AWS RDS CA not in Node default trust store
+  ssl:                { rejectUnauthorized: true },
 });
 
 module.exports = pool;

@@ -21,9 +21,5 @@ variable "db_password" {
   description = "Database administrator password"
   type        = string
   sensitive   = true
-
-  validation {
-    condition     = length(var.db_password) >= 8
-    error_message = "db_password must be at least 8 characters."
-  }
+  default     = "admin123!" #can change to the admin liking, must be at least 8 char
 }

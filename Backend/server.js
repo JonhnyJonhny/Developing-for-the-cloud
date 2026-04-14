@@ -47,7 +47,9 @@ const reportRoutes      = require("./routes/reports");
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/reports", reportRoutes);
 
-app.listen(PORT, async () => {
+(async () => {
   await initDB();
-  console.log(`Backend listening on port ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Backend listening on port ${PORT}`);
+  });
+})();

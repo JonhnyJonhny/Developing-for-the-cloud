@@ -23,13 +23,22 @@ spec:
         - containerPort: 3000
         env:
         - name: DB_HOST
-          value: "your-rds-endpoint.amazonaws.com"
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: host
         - name: DB_PORT
-          value: "3306"
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: port
         - name: DB_NAME
           value: "appdb"
         - name: DB_USER
-          value: "admin"
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: user
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:

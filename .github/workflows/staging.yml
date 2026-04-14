@@ -95,7 +95,7 @@ jobs:
           kubectl create secret generic rds-credentials \
             --namespace ${{ env.K8S_NAMESPACE }} \
             --from-literal=RDS_HOST="${{ secrets.RDS_HOST }}"                 \
-            --from-literal=RDS_PORT="3306"                                    \
+            --from-literal=RDS_PORT="${{ secrets.RDS_PORT }}"                 \
             --from-literal=RDS_USER="${{ secrets.RDS_USER }}"                 \
             --from-literal=RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"         \
             --from-literal=RDS_DATABASE="appdb"                               \

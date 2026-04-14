@@ -1,8 +1,10 @@
+#Pod scaling
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: backend-hpa
   namespace: budget-tracker
+#Backend pod scaling
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -16,13 +18,14 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
+        averageUtilization: 70 #when cpu usage >70%
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: 80
+        averageUtilization: 80 #when ram usage >80%
+#Frontend pod scaling
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
@@ -42,7 +45,7 @@ spec:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: 70
+        averageUtilization: 70 #same as above
   - type: Resource
     resource:
       name: memory

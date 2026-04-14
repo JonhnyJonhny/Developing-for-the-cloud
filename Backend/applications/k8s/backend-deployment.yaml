@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: backend
-        image: budget-backend:latest    # staging.yml sed replaces this tag
+        image: budget-backend:latest 
         ports:
         - containerPort: 3000
         env:

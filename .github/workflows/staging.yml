@@ -1,10 +1,3 @@
-# ============================================================
-#  .github/workflows/staging.yml
-#
-#  Triggers : push to staging branch
-#  Pipeline : build → push Docker Hub → deploy to staging namespace
-# ============================================================
-
 name: Build and Deploy — Staging
 
 on:
@@ -13,8 +6,8 @@ on:
       - staging
 
 env:
-  AWS_REGION:        ap-southeast-1
-  EKS_CLUSTER:       budget-tracker-cluster
+  AWS_REGION:        us-east-1
+  EKS_CLUSTER:       budget-app-cluster
   K8S_NAMESPACE:     budget-tracker-staging
   IMAGE_FRONTEND:    ${{ secrets.DOCKERHUB_USERNAME }}/budget-frontend
   IMAGE_BACKEND:     ${{ secrets.DOCKERHUB_USERNAME }}/budget-backend
@@ -101,12 +94,11 @@ jobs:
         run: |
           kubectl create secret generic rds-credentials \
             --namespace ${{ env.K8S_NAMESPACE }} \
-            --from-literal=RDS_HOST="${{ secrets.STAGING_RDS_HOST }}"         \
-            --from-literal=RDS_PORT="${{ secrets.RDS_PORT }}"                 \
+            --from-literal=RDS_HOST="${{ secrets.RDS_HOST }}"                 \
+            --from-literal=RDS_PORT="3306"                                    \
             --from-literal=RDS_USER="${{ secrets.RDS_USER }}"                 \
             --from-literal=RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"         \
-            --from-literal=RDS_DATABASE="budget_tracker_staging"              \
-            --from-literal=SQS_QUEUE_URL="${{ secrets.STAGING_SQS_QUEUE_URL }}"\
+            --from-literal=RDS_DATABASE="appdb"                               \
             --from-literal=AWS_REGION="${{ env.AWS_REGION }}"                 \
             --save-config \
             --dry-run=client -o yaml \
@@ -120,14 +112,14 @@ jobs:
           # Swap image tags and namespace, then apply
           sed -e "s|budget-frontend:latest|budget-frontend:$TAG|g" \
               -e "s|namespace: budget-tracker$|namespace: $NS|g"   \
-              k8s/frontend-deployment.yaml | kubectl apply -f -
+              Backend/applications/k8s/frontend-deployment.yaml | kubectl apply -f -
 
           sed -e "s|budget-backend:latest|budget-backend:$TAG|g" \
               -e "s|namespace: budget-tracker$|namespace: $NS|g" \
-              k8s/backend-deployment.yaml | kubectl apply -f -
+              Backend/applications/k8s/backend-deployment.yaml | kubectl apply -f -
 
-          kubectl apply -f k8s/frontend-service.yaml -n $NS
-          kubectl apply -f k8s/backend-service.yaml  -n $NS
+          kubectl apply -f Backend/applications/k8s/frontend-service.yaml -n $NS
+          kubectl apply -f Backend/applications/k8s/backend-service.yaml  -n $NS
 
       - name: Wait for staging rollout
         run: |

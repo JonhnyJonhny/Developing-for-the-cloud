@@ -37,7 +37,4 @@ resource "aws_db_instance" "mysql" {
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   skip_final_snapshot = true
   multi_az = false
-  storage_encrypted = true
-  backup_retention_period = 7
-  deletion_protection = true
 }

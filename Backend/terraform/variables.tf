@@ -13,7 +13,7 @@ variable "cluster_name" {
 variable "db_username" {
   description = "Database administrator username"
   type        = string
-  default     = "admin"
+  default     = "admin" #can also be change
   sensitive   = true
 }
 

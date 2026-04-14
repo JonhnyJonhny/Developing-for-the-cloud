@@ -8,7 +8,7 @@ metadata:
 type: Opaque
 stringData:
   admin-user: admin
-  admin-password: changeme
+  admin-password: admin123!
 
 ---
 apiVersion: v1

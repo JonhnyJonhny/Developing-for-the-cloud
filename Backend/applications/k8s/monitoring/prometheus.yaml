@@ -8,12 +8,88 @@ data:
   prometheus.yml: |
     global:
       scrape_interval: 15s
+      evaluation_interval: 15s
+
     scrape_configs:
+
+      # ── Your app ────────────────────────────────────────────────────────────
       - job_name: 'budget-backend'
         static_configs:
           - targets: ['backend.budget-tracker.svc.cluster.local:3000']
         metrics_path: /metrics
 
+      # ── Kubernetes API server ────────────────────────────────────────────────
+      # Metrics: apiserver_request_total, apiserver_request_duration_seconds,
+      #          apiserver_current_inflight_requests, etcd_request_duration_seconds
+      - job_name: 'kubernetes-apiserver'
+        kubernetes_sd_configs:
+          - role: endpoints
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: default;kubernetes;https
+
+      # ── Kubelet / cAdvisor (node + container metrics) ───────────────────────
+      # Metrics: container_cpu_usage_seconds_total, container_memory_usage_bytes,
+      #          container_network_receive_bytes_total, container_fs_usage_bytes,
+      #          kubelet_running_pods, kubelet_node_name
+      - job_name: 'kubernetes-nodes'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      - job_name: 'kubernetes-cadvisor'
+        kubernetes_sd_configs:
+          - role: node
+        scheme: https
+        metrics_path: /metrics/cadvisor
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      # ── Kubernetes services (annotated) ─────────────────────────────────────
+      # Metrics: any service annotated with prometheus.io/scrape: "true"
+      - job_name: 'kubernetes-service-endpoints'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_port]
+            action: replace
+            target_label: __address__
+            regex: (.+)
+            replacement: $1
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_name]
+            target_label: kubernetes_name
+
+      # ── Kubernetes pods (annotated) ──────────────────────────────────────────
+      # Metrics: any pod annotated with prometheus.io/scrape: "true"
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
           - role: pod
@@ -25,6 +101,58 @@ data:
             action: replace
             target_label: __metrics_path__
             regex: (.+)
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: (.+)
+            target_label: __address__
+            replacement: $1
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: kubernetes_pod_name
+
+      # ── Istio control plane ──────────────────────────────────────────────────
+      # Metrics: pilot_xds_pushes, pilot_proxy_convergence_time,
+      #          citadel_server_csr_count, galley_validation_passed
+      - job_name: 'istio-pilot'
+        static_configs:
+          - targets: ['istiod.istio-system.svc.cluster.local:15014']
+        metrics_path: /metrics
+
+      # ── Istio mesh (Envoy sidecars) ──────────────────────────────────────────
+      # Metrics: istio_requests_total, istio_request_duration_milliseconds,
+      #          istio_tcp_connections_opened_total, istio_request_bytes,
+      #          istio_response_bytes
+      - job_name: 'istio-mesh'
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [budget-tracker]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_sidecar_istio_io_inject]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_ip]
+            action: replace
+            target_label: __address__
+            replacement: $1:15090
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod_name
+        metrics_path: /stats/prometheus
+
+      # ── HPA metrics ─────────────────────────────────────────────────────────
+      # Metrics: kube_horizontalpodautoscaler_status_current_replicas,
+      #          kube_horizontalpodautoscaler_status_desired_replicas,
+      #          kube_horizontalpodautoscaler_spec_max_replicas
+      - job_name: 'kube-state-metrics'
+        static_configs:
+          - targets: ['kube-state-metrics.kube-system.svc.cluster.local:8080']
 
 ---
 apiVersion: apps/v1

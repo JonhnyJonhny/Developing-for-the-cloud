@@ -1,4 +1,5 @@
 ---
+# ── Splunk admin credentials ──────────────────────────────────
 apiVersion: v1
 kind: Secret
 metadata:
@@ -6,7 +7,7 @@ metadata:
   namespace: monitoring
 type: Opaque
 stringData:
-  password: admin123!
+  password: changeme
 
 ---
 apiVersion: apps/v1
@@ -30,7 +31,7 @@ spec:
     spec:
       containers:
         - name: splunk
-          image: splunk/splunk:9.2.1
+          image: splunk/splunk:latest
           ports:
             - containerPort: 8000
               name: web

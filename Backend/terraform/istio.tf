@@ -27,6 +27,7 @@ resource "helm_release" "istio_ingress" {
   }
 }
 
+# Enable Istio sidecar injection in the default namespace
 resource "kubernetes_labels" "default_ns_istio" {
   api_version = "v1"
   kind        = "Namespace"

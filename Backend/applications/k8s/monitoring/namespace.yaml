@@ -4,6 +4,8 @@ kind: Namespace
 metadata:
   name: monitoring
   labels:
+    # Prometheus and Splunk don't need sidecars
+    # but Grafana can optionally have one
     istio-injection: disabled
 
 ---
@@ -14,12 +16,11 @@ metadata:
   namespace: monitoring
 spec:
   hosts:
-    - "grafana.PhongKieuTele.id.vn"
-    - "prometheus.PhongKieuTele.id.vn"
-    - "splunk.PhongKieuTele.id.vn"
+    - "*"
   gateways:
-    - budget-tracker/budget-gateway
+    - budget-tracker/budget-gateway    # Reuse the existing app gateway
   http:
+    # ── Grafana ──
     - match:
         - uri:
             prefix: /grafana
@@ -31,6 +32,7 @@ spec:
             port:
               number: 3000
 
+    # ── Prometheus ──
     - match:
         - uri:
             prefix: /prometheus
@@ -42,6 +44,7 @@ spec:
             port:
               number: 9090
 
+    # ── Splunk Web UI ──
     - match:
         - uri:
             prefix: /splunk

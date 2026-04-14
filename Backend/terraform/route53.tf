@@ -12,6 +12,7 @@ data "kubernetes_service_v1" "istio_ingress" {
 
 locals {
   elb_hostname = data.kubernetes_service_v1.istio_ingress.status[0].load_balancer[0].ingress[0].hostname
+  # AWS Network Load Balancer (NLB) hosted zone IDs per region (static, published by AWS)
   elb_zone_ids = {
     "us-east-1"      = "Z26RNL4JYFTOTI"
     "us-east-2"      = "ZLMOA37VPKANP"
@@ -23,6 +24,7 @@ locals {
   elb_zone_id = local.elb_zone_ids[var.aws_region]
 }
 
+# Root domain — must use ALIAS (not CNAME) at zone apex
 resource "aws_route53_record" "root" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "PhongKieuTele.id.vn"
@@ -35,6 +37,7 @@ resource "aws_route53_record" "root" {
   }
 }
 
+# www
 resource "aws_route53_record" "www" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "www.PhongKieuTele.id.vn"
@@ -43,6 +46,7 @@ resource "aws_route53_record" "www" {
   records = [local.elb_hostname]
 }
 
+# API
 resource "aws_route53_record" "app" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "api.PhongKieuTele.id.vn"
@@ -51,6 +55,7 @@ resource "aws_route53_record" "app" {
   records = [local.elb_hostname]
 }
 
+# Grafana
 resource "aws_route53_record" "grafana" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "grafana.PhongKieuTele.id.vn"
@@ -59,6 +64,7 @@ resource "aws_route53_record" "grafana" {
   records = [local.elb_hostname]
 }
 
+# Prometheus
 resource "aws_route53_record" "prometheus" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "prometheus.PhongKieuTele.id.vn"
@@ -67,6 +73,7 @@ resource "aws_route53_record" "prometheus" {
   records = [local.elb_hostname]
 }
 
+# Splunk
 resource "aws_route53_record" "splunk" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "splunk.PhongKieuTele.id.vn"
@@ -76,6 +83,6 @@ resource "aws_route53_record" "splunk" {
 }
 
 output "route53_name_servers" {
-  description = "namespace to add to dns provider"
+  description = "Add these name servers to your domain registrar for PhongKieuTele.id.vn"
   value       = aws_route53_zone.main.name_servers
 }

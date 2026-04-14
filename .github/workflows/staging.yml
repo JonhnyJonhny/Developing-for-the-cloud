@@ -91,13 +91,18 @@ jobs:
             istio-injection=enabled --overwrite
 
       - name: Create staging RDS secret
+        env:
+          RDS_HOST:     ${{ secrets.RDS_HOST }}
+          RDS_PORT:     ${{ secrets.RDS_PORT }}
+          RDS_USER:     ${{ secrets.RDS_USER }}
+          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
         run: |
           kubectl create secret generic rds-credentials \
             --namespace ${{ env.K8S_NAMESPACE }} \
-            --from-literal=RDS_HOST="${{ secrets.RDS_HOST }}"                 \
-            --from-literal=RDS_PORT="${{ secrets.RDS_PORT }}"                 \
-            --from-literal=RDS_USER="${{ secrets.RDS_USER }}"                 \
-            --from-literal=RDS_PASSWORD="${{ secrets.RDS_PASSWORD }}"         \
+            --from-literal=RDS_HOST="$RDS_HOST"                               \
+            --from-literal=RDS_PORT="$RDS_PORT"                               \
+            --from-literal=RDS_USER="$RDS_USER"                               \
+            --from-literal=RDS_PASSWORD="$RDS_PASSWORD"                       \
             --from-literal=RDS_DATABASE="appdb"                               \
             --from-literal=AWS_REGION="${{ env.AWS_REGION }}"                 \
             --save-config \

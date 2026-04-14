@@ -1,9 +1,10 @@
+# application/.github/workflows/deploy.yml
 name: Build and Deploy to EKS
 
 on:
   push:
     branches:
-      - main
+      - main # Triggers the workflow on push to the main branch
   workflow_dispatch: 
 
 env:
@@ -58,35 +59,47 @@ jobs:
         BACKEND_IMAGE:  ${{ steps.build-image.outputs.backend_image }}
         FRONTEND_IMAGE: ${{ steps.build-image.outputs.frontend_image }}
         NS: ${{ env.K8S_NAMESPACE }}
+        RDS_HOST:     ${{ secrets.RDS_HOST }}
+        RDS_USER:     ${{ secrets.RDS_USER }}
+        DB_PASSWORD:  ${{ secrets.DB_PASSWORD }}
       run: |
-        set -e
+        set -e  # stop on first error and show which command failed
+
+        # Ensure namespaces exist
         kubectl create namespace $NS --dry-run=client -o yaml | kubectl apply -f -
         kubectl label namespace $NS istio-injection=enabled --overwrite
         kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 
+        # Create/update db-credentials secret with all required keys
         kubectl create secret generic db-credentials \
-          --from-literal=host=${{ secrets.RDS_HOST }} \
-          --from-literal=port=${{ secrets.RDS_PORT }} \
-          --from-literal=user=${{ secrets.RDS_USER }} \
-          --from-literal=password=${{ secrets.RDS_PASSWORD }} \
-          --namespace=$NS --dry-run=client -o yaml | kubectl apply -f -
+          --from-literal=host="$RDS_HOST" \
+          --from-literal=port="3306" \
+          --from-literal=user="$RDS_USER" \
+          --from-literal=password="$DB_PASSWORD" \
+          --namespace="$NS" --dry-run=client -o yaml | kubectl apply -f -
 
+        # Inject real image tag into backend manifest and apply
         sed -i "s|BACKEND_IMAGE_PLACEHOLDER|$BACKEND_IMAGE|g" \
           Backend/applications/k8s/deployment.yaml
         kubectl apply -f Backend/applications/k8s/deployment.yaml -n $NS
 
+        # Deploy backend service
         kubectl apply -f Backend/applications/k8s/backend-service.yaml -n $NS
 
+        # Deploy frontend
         sed -e "s|budget-frontend:latest|$FRONTEND_IMAGE|g" \
           Backend/applications/k8s/frontend-deployment.yaml | kubectl apply -n $NS -f -
         kubectl apply -f Backend/applications/k8s/frontend-service.yaml -n $NS
 
+        # Apply Istio Gateway and VirtualService routing
         kubectl apply -f Backend/applications/k8s/gateway.yaml
         kubectl apply -f Backend/applications/k8s/virtual-service.yaml
 
+        # Apply monitoring stack
         kubectl apply -f Backend/applications/k8s/monitoring/namespace.yaml || echo "Warning: namespace.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/prometheus.yaml -n monitoring || echo "Warning: prometheus.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/grafana.yaml -n monitoring || echo "Warning: grafana.yaml had issues, continuing"
         kubectl apply -f Backend/applications/k8s/monitoring/splunk.yaml -n monitoring || echo "Warning: splunk.yaml had issues, continuing"
 
+        # Apply monitoring virtual services (namespace must exist first)
         kubectl apply -f Backend/applications/k8s/monitoring-virtual-service.yaml

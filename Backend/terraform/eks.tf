@@ -1,7 +1,7 @@
 resource "aws_eks_cluster" "main" {
   name = var.cluster_name
   role_arn = aws_iam_role.cluster_role.arn
-  version = "1.30"
+  version = "1.31"
 
   vpc_config {
     subnet_ids = [aws_subnet.private_1.id,aws_subnet.private_2.id]
@@ -11,7 +11,7 @@ resource "aws_eks_cluster" "main" {
 
   depends_on = [ aws_iam_policy_attachment.cluster_policy ]
 }
-
+# create the main cluster within the VPC and attach the accesspoint
 resource "aws_eks_node_group" "app_nodes" {
   cluster_name = aws_eks_cluster.main.name
   node_group_name = "app_nodes"
@@ -37,3 +37,4 @@ resource "aws_eks_node_group" "app_nodes" {
     aws_iam_role_policy_attachment.cluster_autoscaler,
    ]
 }
+#create the worker node group and attach policy for autoscaler

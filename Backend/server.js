@@ -1,13 +1,14 @@
-// server.js — Express entry point
 const express = require("express");
 const pool    = require("./db");
+const client  = require("prom-client");
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+client.collectDefaultMetrics();
+
 app.use(express.json());
 
-// Auto-create tables on startup
 async function initDB() {
   try {
     await pool.query(`
@@ -27,7 +28,6 @@ async function initDB() {
   }
 }
 
-// Health-check used by the HEALTHCHECK in Dockerfile.backend
 app.get("/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
@@ -37,7 +37,11 @@ app.get("/health", async (_req, res) => {
   }
 });
 
-// Import and mount route modules
+app.get("/metrics", async (_req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
+});
+
 const transactionRoutes = require("./routes/transactions");
 const reportRoutes      = require("./routes/reports");
 app.use("/api/transactions", transactionRoutes);

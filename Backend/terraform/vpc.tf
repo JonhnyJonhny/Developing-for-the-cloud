@@ -14,7 +14,6 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-#Public subnets
 resource "aws_subnet" "public_1" {
   vpc_id = aws_vpc.main.id
   cidr_block = "10.0.1.0/24"
@@ -37,7 +36,6 @@ resource "aws_subnet" "public_2" {
     }
 }
 
-#Private subnets
 resource "aws_subnet" "private_1" {
     vpc_id = aws_vpc.main.id
     cidr_block = "10.0.10.0/24"
@@ -58,7 +56,6 @@ resource "aws_subnet" "private_2" {
     }
 }
 
-#Private subnets for DB
 resource "aws_subnet" "private_db_1" {
     vpc_id = aws_vpc.main.id
     cidr_block = "10.0.20.0/24"
@@ -77,7 +74,6 @@ resource "aws_subnet" "private_db_2" {
     }
 }
 
-#NAT gateway
 resource "aws_eip" "nat_1" {
   domain = "vpc"
 }
@@ -96,7 +92,6 @@ resource "aws_nat_gateway" "nat_2" {
   depends_on = [ aws_internet_gateway.igw ]
 }
 
-#Routing
 resource "aws_route_table" "publicrt" {
   vpc_id = aws_vpc.main.id
   route {

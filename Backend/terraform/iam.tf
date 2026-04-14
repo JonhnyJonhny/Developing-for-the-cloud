@@ -1,4 +1,3 @@
-#cluster role
 resource "aws_iam_role" "cluster_role" {
   name = "eks-cluster-role"
   assume_role_policy = jsonencode({
@@ -21,7 +20,6 @@ resource "aws_iam_policy_attachment" "cluster_policy" {
   roles      = [aws_iam_role.cluster_role.name]
 }
 
-#Worker Node Role
 resource "aws_iam_role" "node_role" {
   name = "eks-node-role"
   assume_role_policy = jsonencode({

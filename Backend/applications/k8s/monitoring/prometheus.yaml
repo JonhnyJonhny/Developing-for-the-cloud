@@ -1,9 +1,4 @@
-# ============================================================
-#  k8s/monitoring/prometheus.yaml
-# ============================================================
 
----
-# ── ConfigMap — prometheus.yml config ────────────────────────
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -16,10 +11,22 @@ data:
     scrape_configs:
       - job_name: 'budget-backend'
         static_configs:
-          - targets: ['backend.budget-tracker.svc.cluster.local:80']
+          - targets: ['backend.budget-tracker.svc.cluster.local:3000']
+        metrics_path: /metrics
+
+      - job_name: 'kubernetes-pods'
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
 
 ---
-# ── Prometheus Deployment ─────────────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -61,7 +68,6 @@ spec:
           name: prometheus-config
 
 ---
-# ── Prometheus Service ────────────────────────────────────────
 apiVersion: v1
 kind: Service
 metadata:
@@ -76,17 +82,3 @@ spec:
   - port: 9090
     targetPort: 9090
   type: ClusterIP
-
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: monitoring
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: istio-system
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: budget-tracker

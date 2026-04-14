@@ -1,13 +1,4 @@
-# ============================================================
-#  k8s/monitoring/splunk.yaml
-#  Deploys:
-#  - Splunk Enterprise (central log aggregation)
-#  - Splunk Universal Forwarder as DaemonSet (runs on every node)
-#    to collect logs from all pods including budget-tracker
-# ============================================================
-
 ---
-# ── Splunk admin credentials ──────────────────────────────────
 apiVersion: v1
 kind: Secret
 metadata:
@@ -15,25 +6,9 @@ metadata:
   namespace: monitoring
 type: Opaque
 stringData:
-  password: changeme   # Override with: kubectl create secret generic splunk-credentials --from-literal=password='YourPassword' -n monitoring --dry-run=client -o yaml | kubectl apply -f -
+  password: changeme
 
 ---
-# ── Persistent storage for Splunk indexes ────────────────────
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: splunk-pvc
-  namespace: monitoring
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: gp2
-  resources:
-    requests:
-      storage: 50Gi             # Splunk needs significant storage for indexes
-
----
-# ── Splunk Enterprise Deployment ─────────────────────────────
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -55,15 +30,15 @@ spec:
     spec:
       containers:
         - name: splunk
-          image: splunk/splunk:9.1.2
+          image: splunk/splunk:latest
           ports:
-            - containerPort: 8000    # Splunk Web UI
+            - containerPort: 8000
               name: web
-            - containerPort: 8088    # HTTP Event Collector (HEC)
+            - containerPort: 8088
               name: hec
-            - containerPort: 9997    # Universal Forwarder receiver
+            - containerPort: 9997
               name: forwarder
-            - containerPort: 8089    # Splunk management port
+            - containerPort: 8089
               name: mgmt
           env:
             - name: SPLUNK_START_ARGS
@@ -73,32 +48,22 @@ spec:
                 secretKeyRef:
                   name: splunk-credentials
                   key: password
-            - name: SPLUNK_HEC_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: splunk-credentials
-                  key: password
-            - name: SPLUNK_APPS_URL
-              value: ""
-            # Pre-configure indexes for budget tracker
-            - name: SPLUNK_DEFAULTS_URL
-              value: ""
           volumeMounts:
             - name: storage
               mountPath: /opt/splunk/var
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "500m"
+              memory: "512Mi"
+              cpu: "250m"
             limits:
-              memory: "4Gi"
-              cpu: "2000m"
+              memory: "1Gi"
+              cpu: "500m"
           readinessProbe:
             httpGet:
               path: /services/server/info
               port: 8089
               scheme: HTTPS
-            initialDelaySeconds: 60   # Splunk takes time to start
+            initialDelaySeconds: 60
             periodSeconds: 15
             failureThreshold: 10
           livenessProbe:
@@ -110,11 +75,10 @@ spec:
             periodSeconds: 30
       volumes:
         - name: storage
-          persistentVolumeClaim:
-            claimName: splunk-pvc
+          emptyDir: {}
 
 ---
-# ── Splunk Services ───────────────────────────────────────────
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -141,8 +105,6 @@ spec:
   type: ClusterIP
 
 ---
-# ── Splunk Universal Forwarder — runs on EVERY node ──────────
-# DaemonSet ensures logs from all pods are collected
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -162,13 +124,12 @@ spec:
         sidecar.istio.io/inject: "false"
     spec:
       tolerations:
-        # Run on all nodes including control plane
         - key: node-role.kubernetes.io/control-plane
           operator: Exists
           effect: NoSchedule
       containers:
         - name: splunk-forwarder
-          image: splunk/universalforwarder:9.1.2
+          image: splunk/universalforwarder:latest
           env:
             - name: SPLUNK_START_ARGS
               value: "--accept-license"
@@ -177,11 +138,9 @@ spec:
                 secretKeyRef:
                   name: splunk-credentials
                   key: password
-            # Forward to Splunk Enterprise service
             - name: SPLUNK_FORWARD_SERVER
               value: "splunk-service:9997"
           volumeMounts:
-            # Mount host log paths to collect all container logs
             - name: varlog
               mountPath: /var/log
               readOnly: true
@@ -192,11 +151,11 @@ spec:
               mountPath: /opt/splunkforwarder/etc/system/local
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "100m"
+              memory: "128Mi"
+              cpu: "50m"
             limits:
-              memory: "512Mi"
-              cpu: "300m"
+              memory: "256Mi"
+              cpu: "150m"
       volumes:
         - name: varlog
           hostPath:
@@ -209,7 +168,6 @@ spec:
             name: splunk-forwarder-inputs
 
 ---
-# ── Forwarder inputs — what log paths to collect ─────────────
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -217,19 +175,16 @@ metadata:
   namespace: monitoring
 data:
   inputs.conf: |
-    # Collect all Kubernetes pod logs
     [monitor:///var/log/containers/*.log]
     index = kubernetes
     sourcetype = kube:container
     disabled = false
 
-    # Specifically collect budget-tracker namespace logs
     [monitor:///var/log/containers/*budget-tracker*.log]
     index = budget_tracker
     sourcetype = kube:budget-tracker
     disabled = false
 
-    # Collect Istio proxy logs
     [monitor:///var/log/containers/*istio-proxy*.log]
     index = istio
     sourcetype = kube:istio-proxy
@@ -243,7 +198,6 @@ data:
     server = splunk-service:9997
 
   props.conf: |
-    # Parse JSON logs from Node.js backend
     [kube:budget-tracker]
     KV_MODE = json
     TIME_PREFIX = "timestamp":"

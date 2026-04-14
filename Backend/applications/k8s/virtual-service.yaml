@@ -1,10 +1,3 @@
-# ============================================================
-#  k8s/virtual-service.yaml
-#  Domain: PhongKieuTele.id.vn
-#  Routes traffic based on hostname to the correct service
-# ============================================================
-
-#Main app — PhongKieuTele.id.vn
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -17,7 +10,6 @@ spec:
   gateways:
     - budget-gateway
   http:
-    # All routes go to frontend
     - match:
         - uri:
             prefix: /
@@ -28,7 +20,6 @@ spec:
               number: 80
 
 ---
-#API — api.PhongKieuTele.id.vn 
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:

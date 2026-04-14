@@ -1,9 +1,7 @@
-// routes/transactions.js — CRUD for transactions stored in RDS
 const express = require("express");
 const pool    = require("../db");
 const router  = express.Router();
 
-// GET /api/transactions
 router.get("/", async (_req, res) => {
   try {
     const [rows] = await pool.query(
@@ -16,7 +14,6 @@ router.get("/", async (_req, res) => {
   }
 });
 
-// POST /api/transactions
 router.post("/", async (req, res) => {
   const { name, category, amount, type, icon } = req.body;
   if (!name || !category || amount === undefined || !type) {
@@ -34,7 +31,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-// DELETE /api/transactions/:id
 router.delete("/:id", async (req, res) => {
   try {
     await pool.query("DELETE FROM transactions WHERE id = ?", [req.params.id]);

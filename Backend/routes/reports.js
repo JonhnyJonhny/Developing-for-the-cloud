@@ -1,10 +1,8 @@
-// routes/reports.js — generates a CSV report and streams it as a download
 const express = require("express");
 const pool    = require("../db");
 
 const router = express.Router();
 
-// GET /api/reports/download
 router.get("/download", async (req, res) => {
   try {
     const [rows] = await pool.query(

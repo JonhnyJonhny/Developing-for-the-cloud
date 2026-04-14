@@ -61,7 +61,7 @@ jobs:
         NS: ${{ env.K8S_NAMESPACE }}
         RDS_HOST:     ${{ secrets.RDS_HOST }}
         RDS_USER:     ${{ secrets.RDS_USER }}
-        DB_PASSWORD:  ${{ secrets.DB_PASSWORD }}
+        RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
       run: |
         set -e  # stop on first error and show which command failed
 
@@ -75,7 +75,7 @@ jobs:
           --from-literal=host="$RDS_HOST" \
           --from-literal=port="3306" \
           --from-literal=user="$RDS_USER" \
-          --from-literal=password="$DB_PASSWORD" \
+          --from-literal=password="$RDS_PASSWORD" \
           --namespace="$NS" --dry-run=client -o yaml | kubectl apply -f -
 
         # Inject real image tag into backend manifest and apply

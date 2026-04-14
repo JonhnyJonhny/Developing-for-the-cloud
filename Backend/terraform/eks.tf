@@ -1,7 +1,7 @@
 resource "aws_eks_cluster" "main" {
   name = var.cluster_name
   role_arn = aws_iam_role.cluster_role.arn
-  version = "1.31"
+  version = "1.30"
 
   vpc_config {
     subnet_ids = [aws_subnet.private_1.id,aws_subnet.private_2.id]
@@ -25,9 +25,15 @@ resource "aws_eks_node_group" "app_nodes" {
     min_size = 2
   }
 
+  tags = {
+    "k8s.io/cluster-autoscaler/enabled"                    = "true"
+    "k8s.io/cluster-autoscaler/${var.cluster_name}"        = "owned"
+  }
+
   depends_on = [ 
     aws_iam_role_policy_attachment.node_policy,
     aws_iam_role_policy_attachment.eks_cni,
     aws_iam_role_policy_attachment.eks_ecr,
+    aws_iam_role_policy_attachment.cluster_autoscaler,
    ]
 }

@@ -15,16 +15,16 @@ router.get("/", async (_req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { name, category, amount, type, icon } = req.body;
+  const { name, category, amount, type } = req.body;
   if (!name || !category || amount === undefined || !type) {
     return res.status(400).json({ error: "Missing required fields" });
   }
   try {
     const [result] = await pool.query(
-      "INSERT INTO transactions (name, category, amount, type, icon) VALUES (?, ?, ?, ?, ?)",
-      [name, category, amount, type, icon || "wallet"]
+      "INSERT INTO transactions (name, category, amount, type) VALUES (?, ?, ?, ?)",
+      [name, category, amount, type || "wallet"]
     );
-    res.status(201).json({ id: result.insertId, name, category, amount, type, icon });
+    res.status(201).json({ id: result.insertId, name, category, amount, type });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Database error" });

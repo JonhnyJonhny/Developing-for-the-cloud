@@ -1,3 +1,4 @@
+# action workflow for deployment on main branch
 name: Build and Deploy — Staging
 
 on:
@@ -114,7 +115,6 @@ jobs:
           TAG=${{ needs.build-staging.outputs.image_tag }}
           NS=${{ env.K8S_NAMESPACE }}
 
-          # Swap image tags and namespace, then apply
           sed -e "s|budget-frontend:latest|budget-frontend:$TAG|g" \
               -e "s|namespace: budget-tracker$|namespace: $NS|g"   \
               Backend/applications/k8s/frontend-deployment.yaml | kubectl apply -f -

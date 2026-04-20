@@ -12,7 +12,6 @@ data "kubernetes_service_v1" "istio_ingress" {
 
 locals {
   elb_hostname = data.kubernetes_service_v1.istio_ingress.status[0].load_balancer[0].ingress[0].hostname
-  # AWS Network Load Balancer (NLB) hosted zone IDs per region (static, published by AWS)
   elb_zone_ids = {
     "us-east-1"      = "Z26RNL4JYFTOTI"
     "us-east-2"      = "ZLMOA37VPKANP"
@@ -24,7 +23,6 @@ locals {
   elb_zone_id = local.elb_zone_ids[var.aws_region]
 }
 
-# Root domain — must use ALIAS (not CNAME) at zone apex
 resource "aws_route53_record" "root" {
   zone_id = aws_route53_zone.main.zone_id
   name    = "PhongKieuTele.id.vn"

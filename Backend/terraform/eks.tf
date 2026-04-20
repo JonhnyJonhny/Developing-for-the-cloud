@@ -25,16 +25,9 @@ resource "aws_eks_node_group" "app_nodes" {
     min_size = 2
   }
 
-  tags = {
-    "k8s.io/cluster-autoscaler/enabled"                    = "true"
-    "k8s.io/cluster-autoscaler/${var.cluster_name}"        = "owned"
-  }
-
   depends_on = [ 
     aws_iam_role_policy_attachment.node_policy,
     aws_iam_role_policy_attachment.eks_cni,
     aws_iam_role_policy_attachment.eks_ecr,
-    aws_iam_role_policy_attachment.cluster_autoscaler,
-   ]
+  ]
 }
-#create the worker node group and attach policy for autoscaler

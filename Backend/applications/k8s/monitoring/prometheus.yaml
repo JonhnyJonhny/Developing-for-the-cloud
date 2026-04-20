@@ -12,13 +12,13 @@ data:
 
     scrape_configs:
 
-      # ── Your app ────────────────────────────────────────────────────────────
+      # app 
       - job_name: 'budget-backend'
         static_configs:
           - targets: ['backend.budget-tracker.svc.cluster.local:3000']
         metrics_path: /metrics
 
-      # ── Kubernetes API server ────────────────────────────────────────────────
+      # Kubernetes API server 
       # Metrics: apiserver_request_total, apiserver_request_duration_seconds,
       #          apiserver_current_inflight_requests, etcd_request_duration_seconds
       - job_name: 'kubernetes-apiserver'
@@ -34,7 +34,7 @@ data:
             action: keep
             regex: default;kubernetes;https
 
-      # ── Kubelet / cAdvisor (node + container metrics) ───────────────────────
+      # Kubelet / cAdvisor (node + container metrics) 
       # Metrics: container_cpu_usage_seconds_total, container_memory_usage_bytes,
       #          container_network_receive_bytes_total, container_fs_usage_bytes,
       #          kubelet_running_pods, kubelet_node_name
@@ -63,7 +63,7 @@ data:
           - action: labelmap
             regex: __meta_kubernetes_node_label_(.+)
 
-      # ── Kubernetes services (annotated) ─────────────────────────────────────
+      # Kubernetes services (annotated) 
       # Metrics: any service annotated with prometheus.io/scrape: "true"
       - job_name: 'kubernetes-service-endpoints'
         kubernetes_sd_configs:
@@ -88,7 +88,7 @@ data:
           - source_labels: [__meta_kubernetes_service_name]
             target_label: kubernetes_name
 
-      # ── Kubernetes pods (annotated) ──────────────────────────────────────────
+      # Kubernetes pods (annotated) 
       # Metrics: any pod annotated with prometheus.io/scrape: "true"
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
@@ -113,7 +113,7 @@ data:
           - source_labels: [__meta_kubernetes_pod_name]
             target_label: kubernetes_pod_name
 
-      # ── Istio control plane ──────────────────────────────────────────────────
+      # Istio control plane 
       # Metrics: pilot_xds_pushes, pilot_proxy_convergence_time,
       #          citadel_server_csr_count, galley_validation_passed
       - job_name: 'istio-pilot'
@@ -121,7 +121,7 @@ data:
           - targets: ['istiod.istio-system.svc.cluster.local:15014']
         metrics_path: /metrics
 
-      # ── Istio mesh (Envoy sidecars) ──────────────────────────────────────────
+      # Istio mesh (Envoy sidecars) 
       # Metrics: istio_requests_total, istio_request_duration_milliseconds,
       #          istio_tcp_connections_opened_total, istio_request_bytes,
       #          istio_response_bytes
@@ -146,7 +146,7 @@ data:
             target_label: pod_name
         metrics_path: /stats/prometheus
 
-      # ── HPA metrics ─────────────────────────────────────────────────────────
+      # HPA metrics 
       # Metrics: kube_horizontalpodautoscaler_status_current_replicas,
       #          kube_horizontalpodautoscaler_status_desired_replicas,
       #          kube_horizontalpodautoscaler_spec_max_replicas

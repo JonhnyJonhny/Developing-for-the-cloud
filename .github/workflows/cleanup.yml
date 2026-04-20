@@ -1,3 +1,4 @@
+#automatic teardown of pods
 name: Cleanup — Tear down staging
 
 on:
@@ -9,8 +10,8 @@ on:
         type: string
 
 env:
-  AWS_REGION:    ap-southeast-1
-  EKS_CLUSTER:   budget-tracker-cluster
+  AWS_REGION:    us-east-1
+  EKS_CLUSTER:   budget-app-cluster
   K8S_NAMESPACE: budget-tracker-staging
 
 jobs:

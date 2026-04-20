@@ -1,4 +1,4 @@
-# ── Terraform ──────────────────────────────────────────────
+#  Terraform
 **/.terraform/
 **/.terraform.*
 **/*.tfstate
@@ -8,17 +8,16 @@
 **/crash.log
 **/crash.*.log
 
-# ── Node.js ────────────────────────────────────────────────
+#  Node.js
 **/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# ── Environment / secrets (never commit these) ─────────────
-.env
+#  Environment Variables
 .env.*
 !.env.example
 
-# ── OS artefacts ───────────────────────────────────────────
+#  OS artefacts
 .DS_Store
 Thumbs.db

@@ -4,8 +4,6 @@ kind: Namespace
 metadata:
   name: monitoring
   labels:
-    # Prometheus and Splunk don't need sidecars
-    # but Grafana can optionally have one
     istio-injection: disabled
 
 ---
@@ -18,7 +16,7 @@ spec:
   hosts:
     - "*"
   gateways:
-    - budget-tracker/budget-gateway    # Reuse the existing app gateway
+    - budget-tracker/budget-gateway
   http:
     # ── Grafana ──
     - match:

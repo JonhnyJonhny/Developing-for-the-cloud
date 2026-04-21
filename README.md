@@ -1,17 +1,17 @@
 Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/_layouts/15/guestaccess.aspx?share=IQBeXCyi0Nd-TamePV8s86iuARL77DMKtDyRGsX5VtRYK2k&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=nAYZ4N
 ---
 ## Technology Stack
-**Frontend** HTML/CSS/JavaScript, Nginx 1.25 (Alpine)
-**Backend** Node.js 18, Express.js
-**Database** AWS RDS MySQL 8.0
-**Containerization** Docker
-**Orchestration** Kubernetes (AWS EKS 1.31)
-**Service Mesh** Istio (Base, Istiod, ingress gateway)
-**Infrastructure as Code** Terraform
-**CI/CD** Github Action
-**Monitoring** Prometheus, Grafana, Splunk
-**Metrics** Prom-client (node.js), Kubernetes Metric Server
-**Auto-scaling** Horizontal Pod Autoscaler, Cluster autoscaler
+- **Frontend** HTML/CSS/JavaScript, Nginx 1.25 (Alpine)
+- **Backend** Node.js 18, Express.js
+- **Database** AWS RDS MySQL 8.0
+- **Containerization** Docker
+- **Orchestration** Kubernetes (AWS EKS 1.31)
+- **Service Mesh** Istio (Base, Istiod, ingress gateway)
+- **Infrastructure as Code** Terraform
+- **CI/CD** Github Action
+- **Monitoring** Prometheus, Grafana, Splunk
+- **Metrics** Prom-client (node.js), Kubernetes Metric Server
+- **Auto-scaling** Horizontal Pod Autoscaler, Cluster autoscaler
 ---
 ## Setup instruction 
 ### Prerequisite

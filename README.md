@@ -1,5 +1,6 @@
 Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/_layouts/15/guestaccess.aspx?share=IQBeXCyi0Nd-TamePV8s86iuARL77DMKtDyRGsX5VtRYK2k&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=nAYZ4N
-##Technology Stack
+---
+## Technology Stack
 **Frontend** HTML/CSS/JavaScript, Nginx 1.25 (Alpine)
 **Backend** Node.js 18, Express.js
 **Database** AWS RDS MySQL 8.0
@@ -11,17 +12,17 @@ Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/
 **Monitoring** Prometheus, Grafana, Splunk
 **Metrics** Prom-client (node.js), Kubernetes Metric Server
 **Auto-scaling** Horizontal Pod Autoscaler, Cluster autoscaler
-
-##Setup instruction 
-###Prerequisite
+---
+## Setup instruction 
+### Prerequisite
 - [Node.js 18+]
 - [Docker]
 - [Terraform 1.5+]
 - [AWS CLI v2]
 - [kubectl]
 - [Helm 3+]
-
-###local deploymeny
+---
+### local deploymeny
 **clone repo**
 **install backend dependencies**
 **configure environment variables**
@@ -37,8 +38,8 @@ Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/
 ##build docker image locally##
 docker build -f Dockerfile.backend -t budget-backend:local .
 docker build -f Dockerfile.frontend -t budget-frontend:local .
-
-##Cloud Deployment##
+---
+## Cloud Deployment
 **Provision the infrastructure using terraform**
 terraform init
 terraform plan (check first before deploying)

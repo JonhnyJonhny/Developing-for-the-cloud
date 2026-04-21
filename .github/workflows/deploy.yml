@@ -69,16 +69,16 @@ jobs:
         kubectl label namespace $NS istio-injection=enabled --overwrite
         kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 
-        kubectl create secret generic db-credentials \
-          --from-literal=host="$(echo $RDS_HOST | cut -d: -f1)" \
-          --from-literal=port="3306" \
-          --from-literal=user="$RDS_USER" \
-          --from-literal=password="$RDS_PASSWORD" \
-          --namespace="$NS" --dry-run=client -o yaml | kubectl apply -f -
+        kubectl create secret generic rds-credentials \
+          --from-literal=RDS_HOST="$(echo $RDS_HOST | cut -d: -f1)" \
+          --from-literal=RDS_PORT="3306" \
+          --from-literal=RDS_USER="$RDS_USER" \
+          --from-literal=RDS_PASSWORD="$RDS_PASSWORD" \
+          --from-literal=RDS_DATABASE="appdb" \
+          --namespace="$NS" --save-config --dry-run=client -o yaml | kubectl apply -f -
 
-        sed -i "s|BACKEND_IMAGE_PLACEHOLDER|$BACKEND_IMAGE|g" \
-          Backend/applications/k8s/deployment.yaml
-        kubectl apply -f Backend/applications/k8s/deployment.yaml -n $NS
+        sed -e "s|budget-backend:latest|$BACKEND_IMAGE|g" \
+          Backend/applications/k8s/backend-deployment.yaml | kubectl apply -n $NS -f -
 
         kubectl apply -f Backend/applications/k8s/backend-service.yaml -n $NS
 

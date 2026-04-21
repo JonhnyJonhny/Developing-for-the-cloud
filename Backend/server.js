@@ -9,22 +9,27 @@ client.collectDefaultMetrics();
 
 app.use(express.json());
 
-async function initDB() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS transactions (
-        id         INT AUTO_INCREMENT PRIMARY KEY,
-        name       VARCHAR(255)    NOT NULL,
-        category   VARCHAR(255)    NOT NULL,
-        amount     DECIMAL(10,2)   NOT NULL,
-        type       VARCHAR(50)     NOT NULL,
-        icon       VARCHAR(50)     DEFAULT 'wallet',
-        created_at TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("DB schema ready");
-  } catch (err) {
-    console.error("DB init failed:", err.message);
+async function initDB(retries = 5, delayMs = 3000) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS transactions (
+          id         INT AUTO_INCREMENT PRIMARY KEY,
+          name       VARCHAR(255)    NOT NULL,
+          category   VARCHAR(255)    NOT NULL,
+          amount     DECIMAL(10,2)   NOT NULL,
+          type       VARCHAR(50)     NOT NULL,
+          icon       VARCHAR(50)     DEFAULT 'wallet',
+          created_at TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log("DB schema ready");
+      return;
+    } catch (err) {
+      console.error(`DB init failed (attempt ${i}/${retries}):`, err.message);
+      if (i === retries) process.exit(1);
+      await new Promise(res => setTimeout(res, delayMs));
+    }
   }
 }
 

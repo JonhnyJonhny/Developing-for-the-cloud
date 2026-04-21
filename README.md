@@ -23,9 +23,9 @@ Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/
 - [Helm 3+]
 ---
 ### local deploymeny
-**clone repo**
-**install backend dependencies**
-**configure environment variables**
+1. **clone repo**
+2. **install backend dependencies**
+3. **configure environment variables**
  ```env
    PORT=3000
    DB_HOST=<your-mysql-host>
@@ -33,24 +33,26 @@ Video Link: https://buveduvn0-my.sharepoint.com/personal/phong_nk_st_buv_edu_vn/
    DB_PASSWORD=<your-password>
    DB_NAME=appdb
    ```
-**start the backend**
-**serve frontend**
+4. **start the backend**
+5. **serve frontend**
 ##build docker image locally##
-docker build -f Dockerfile.backend -t budget-backend:local .
-docker build -f Dockerfile.frontend -t budget-frontend:local .
+1. docker build -f Dockerfile.backend -t budget-backend:local .
+2. docker build -f Dockerfile.frontend -t budget-frontend:local .
 ---
 ## Cloud Deployment
-**Provision the infrastructure using terraform**
-terraform init
-terraform plan (check first before deploying)
-terraform apply - type YES
-**change DBpassword withint the variables.tf file**
-**Update kubeconfig**
-aws eks update-kubeconfig --name budget-app-cluster --region us-east-1
-**deploy kubernetes manifest**
-apply all manifest files within k8s manually
-**verify deployment**
+1. **Provision the infrastructure using terraform**
+- terraform init
+- terraform plan (check first before deploying)
+- terraform apply - type YES
+2. **change DBpassword withint the variables.tf file**
+3. **Update kubeconfig**
+- aws eks update-kubeconfig --name budget-app-cluster --region us-east-1
+4. **deploy kubernetes manifest**
+- apply all manifest files within k8s manually
+5. **verify deployment**
+```env
 kubectl get pods -n budget-tracker
 kubectl get svc -n budget-tracker
 kubectl get svc -n istio-system istio-ingress
-**check monitoring services by adding repspective subdomain before the IP or DNS ex grafana. premetheus. splunk.**
+```
+6. **check monitoring services by adding repspective subdomain before the IP or DNS ex grafana. premetheus. splunk.**
